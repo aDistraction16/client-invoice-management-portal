@@ -6,7 +6,7 @@ import session from 'express-session';
 import RedisStore from 'connect-redis';
 import { createClient } from 'redis';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 
 // Import routes
 import authRoutes from './routes/auth';

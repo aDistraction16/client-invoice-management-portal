@@ -52,6 +52,9 @@ const calculateTotal = (items: any[]): number => {
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     
     const userInvoices = await db.select({
       id: invoices.id,
@@ -87,6 +90,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 router.get('/:id', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const invoiceId = parseInt(req.params.id);
     
     const invoice = await db.select({
@@ -141,6 +147,9 @@ router.get('/:id', requireAuth, validateParams(idParamSchema), async (req: Reque
 router.post('/', requireAuth, validateBody(createInvoiceSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const { clientId, issueDate, dueDate, items, notes } = req.body;
 
     // Verify client belongs to user
@@ -205,6 +214,9 @@ router.post('/', requireAuth, validateBody(createInvoiceSchema), async (req: Req
 router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(updateInvoiceSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const invoiceId = parseInt(req.params.id);
     const updateData = req.body;
 
@@ -246,6 +258,9 @@ router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(upda
 router.delete('/:id', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const invoiceId = parseInt(req.params.id);
 
     // Check if invoice exists and belongs to user
@@ -285,6 +300,9 @@ router.delete('/:id', requireAuth, validateParams(idParamSchema), async (req: Re
 router.patch('/:id/send', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const invoiceId = parseInt(req.params.id);
 
     // Check if invoice exists and belongs to user
@@ -327,6 +345,9 @@ router.patch('/:id/send', requireAuth, validateParams(idParamSchema), async (req
 router.patch('/:id/pay', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const invoiceId = parseInt(req.params.id);
 
     // Check if invoice exists and belongs to user

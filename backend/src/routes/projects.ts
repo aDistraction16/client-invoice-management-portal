@@ -32,6 +32,9 @@ const idParamSchema = Joi.object({
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     
     const userProjects = await db.select({
       id: projects.id,
@@ -66,6 +69,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 router.get('/client/:clientId', requireAuth, validateParams(Joi.object({ clientId: Joi.number().integer().positive().required() })), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const clientId = parseInt(req.params.clientId);
     
     // Verify client belongs to user
@@ -101,6 +107,9 @@ router.get('/client/:clientId', requireAuth, validateParams(Joi.object({ clientI
 router.get('/:id', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const projectId = parseInt(req.params.id);
     
     const project = await db.select({
@@ -142,6 +151,9 @@ router.get('/:id', requireAuth, validateParams(idParamSchema), async (req: Reque
 router.post('/', requireAuth, validateBody(createProjectSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const { clientId, projectName, description, hourlyRate, status } = req.body;
 
     // Verify client belongs to user
@@ -182,6 +194,9 @@ router.post('/', requireAuth, validateBody(createProjectSchema), async (req: Req
 router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(updateProjectSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const projectId = parseInt(req.params.id);
     const updateData = req.body;
 
@@ -227,6 +242,9 @@ router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(upda
 router.delete('/:id', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const projectId = parseInt(req.params.id);
 
     // Check if project exists and belongs to user

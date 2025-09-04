@@ -38,6 +38,9 @@ const querySchema = Joi.object({
 router.get('/', requireAuth, validateQuery(querySchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const { projectId, startDate, endDate, page, limit } = req.query as any;
     const offset = (page - 1) * limit;
 
@@ -88,6 +91,9 @@ router.get('/', requireAuth, validateQuery(querySchema), async (req: Request, re
 router.get('/project/:projectId', requireAuth, validateParams(Joi.object({ projectId: Joi.number().integer().positive().required() })), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const projectId = parseInt(req.params.projectId);
     
     // Verify project belongs to user
@@ -126,6 +132,9 @@ router.get('/project/:projectId', requireAuth, validateParams(Joi.object({ proje
 router.get('/:id', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const entryId = parseInt(req.params.id);
     
     const entry = await db.select({
@@ -167,6 +176,9 @@ router.get('/:id', requireAuth, validateParams(idParamSchema), async (req: Reque
 router.post('/', requireAuth, validateBody(createTimeEntrySchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const { projectId, date, hoursLogged, description } = req.body;
 
     // Verify project belongs to user
@@ -209,6 +221,9 @@ router.post('/', requireAuth, validateBody(createTimeEntrySchema), async (req: R
 router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(updateTimeEntrySchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const entryId = parseInt(req.params.id);
     const updateData = req.body;
 
@@ -255,6 +270,9 @@ router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(upda
 router.delete('/:id', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const entryId = parseInt(req.params.id);
 
     // Check if time entry exists and belongs to user

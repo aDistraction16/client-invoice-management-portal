@@ -33,8 +33,11 @@ const idParamSchema = Joi.object({
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     
-    const userClients = await db.select().from(clients).where(eq(clients.userId, userId));
+  const userClients = await db.select().from(clients).where(eq(clients.userId, userId));
     
     res.json({
       clients: userClients,
@@ -54,6 +57,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 router.get('/:id', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const clientId = parseInt(req.params.id);
     
     const client = await db.select().from(clients)
@@ -82,6 +88,9 @@ router.get('/:id', requireAuth, validateParams(idParamSchema), async (req: Reque
 router.post('/', requireAuth, validateBody(createClientSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const { clientName, contactPerson, email, address, phoneNumber } = req.body;
 
     const newClient = await db.insert(clients).values({
@@ -111,6 +120,9 @@ router.post('/', requireAuth, validateBody(createClientSchema), async (req: Requ
 router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(updateClientSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const clientId = parseInt(req.params.id);
     const updateData = req.body;
 
@@ -150,6 +162,9 @@ router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(upda
 router.delete('/:id', requireAuth, validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
+    if (typeof userId !== 'number') {
+      return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
     const clientId = parseInt(req.params.id);
 
     // Check if client exists and belongs to user

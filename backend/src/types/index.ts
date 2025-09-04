@@ -1,10 +1,3 @@
-// Express session extension
-declare module 'express-session' {
-  interface SessionData {
-    userId: number;
-  }
-}
-
 // API Response types
 export interface ApiResponse<T = any> {
   message?: string;
@@ -77,7 +70,9 @@ export class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = true;
 
-    Error.captureStackTrace(this, this.constructor);
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 }
 

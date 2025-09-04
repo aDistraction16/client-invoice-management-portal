@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 import Joi from 'joi';
 import { eq } from 'drizzle-orm';
 import db from '../db/connection';
@@ -139,6 +139,13 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId;
     
+    if (typeof userId !== 'number') {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'User session is invalid'
+      });
+    }
+
     const user = await db.select({
       id: users.id,
       email: users.email,

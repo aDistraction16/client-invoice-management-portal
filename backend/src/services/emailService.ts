@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
