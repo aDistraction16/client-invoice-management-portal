@@ -25,9 +25,9 @@ export interface AuthenticatedRequest extends Request {
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.session?.userId) {
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Authentication required',
-      message: 'Please log in to access this resource'
+      message: 'Please log in to access this resource',
     });
   }
 
@@ -46,7 +46,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     if (userResult.length === 0) {
       return res.status(401).json({
         error: 'User not found',
-        message: 'Your session appears to be invalid'
+        message: 'Your session appears to be invalid',
       });
     }
 
@@ -56,7 +56,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     console.error('❌ Error in auth middleware:', error);
     return res.status(500).json({
       error: 'Authentication error',
-      message: 'Failed to verify user authentication'
+      message: 'Failed to verify user authentication',
     });
   }
 };
@@ -70,7 +70,7 @@ export const requireNoAuth = (req: Request, res: Response, next: NextFunction) =
   if (req.session?.userId) {
     return res.status(400).json({
       error: 'Already authenticated',
-      message: 'Please log out first'
+      message: 'Please log out first',
     });
   }
   next();

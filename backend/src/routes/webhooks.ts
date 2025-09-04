@@ -12,59 +12,62 @@ const router = Router();
  * Stripe webhook endpoint for payment confirmations
  * POST /api/webhooks/stripe
  */
-router.post('/stripe', express.raw({type: 'application/json'}), async (req: Request, res: Response) => {
-  const signature = req.headers['stripe-signature'] as string;
+router.post(
+  '/stripe',
+  express.raw({ type: 'application/json' }),
+  async (req: Request, res: Response) => {
+    const signature = req.headers['stripe-signature'] as string;
 
-  if (!signature) {
-    return res.status(400).json({
-      error: 'Missing signature'
-    });
-  }
-
-  try {
-    // Get raw body for signature verification
-    const rawBody = req.body;
-    
-    // Verify webhook signature
-    const event = stripeService.verifyWebhookSignature(rawBody, signature);
-
-    // Process the webhook event
-    const webhookData = stripeService.processWebhookEvent(event);
-
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        await handlePaymentSuccess(webhookData);
-        break;
-        
-      case 'payment_intent.payment_failed':
-        await handlePaymentFailure(webhookData);
-        break;
-        
-      case 'payment_intent.canceled':
-        await handlePaymentCancellation(webhookData);
-        break;
-        
-      case 'checkout.session.completed':
-        await handleCheckoutSessionCompleted(event);
-        break;
-        
-      default:
-        // Unhandled webhook event type
-        break;
+    if (!signature) {
+      return res.status(400).json({
+        error: 'Missing signature',
+      });
     }
 
-    res.json({
-      message: 'Webhook processed successfully',
-      eventType: event.type
-    });
+    try {
+      // Get raw body for signature verification
+      const rawBody = req.body;
 
-  } catch (error: any) {
-    res.status(400).json({
-      error: 'Webhook processing failed',
-      message: error.message
-    });
+      // Verify webhook signature
+      const event = stripeService.verifyWebhookSignature(rawBody, signature);
+
+      // Process the webhook event
+      const webhookData = stripeService.processWebhookEvent(event);
+
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          await handlePaymentSuccess(webhookData);
+          break;
+
+        case 'payment_intent.payment_failed':
+          await handlePaymentFailure(webhookData);
+          break;
+
+        case 'payment_intent.canceled':
+          await handlePaymentCancellation(webhookData);
+          break;
+
+        case 'checkout.session.completed':
+          await handleCheckoutSessionCompleted(event);
+          break;
+
+        default:
+          // Unhandled webhook event type
+          break;
+      }
+
+      res.json({
+        message: 'Webhook processed successfully',
+        eventType: event.type,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        error: 'Webhook processing failed',
+        message: error.message,
+      });
+    }
   }
-});
+);
 
 /**
  * Handle successful payment
@@ -80,7 +83,7 @@ async function handlePaymentSuccess(webhookData: any) {
       .update(invoices)
       .set({
         status: 'paid',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(invoices.id, parseInt(webhookData.invoiceId)))
       .returning();
@@ -89,7 +92,7 @@ async function handlePaymentSuccess(webhookData: any) {
     const invoiceData = await db
       .select({
         invoice: invoices,
-        client: clients
+        client: clients,
       })
       .from(invoices)
       .leftJoin(clients, eq(invoices.clientId, clients.id))
@@ -98,28 +101,24 @@ async function handlePaymentSuccess(webhookData: any) {
 
     if (invoiceData.length > 0) {
       const { invoice, client } = invoiceData[0];
-      
+
       // Send payment confirmation email
       if (client?.email) {
         try {
-          await emailService.sendPaymentConfirmationEmail(
-            client.email,
-            {
-              invoiceNumber: invoice.invoiceNumber,
-              clientName: client.clientName,
-              amountPaid: stripeService.formatAmount(webhookData.amount, webhookData.currency),
-              paymentDate: new Date().toISOString(),
-              paymentMethod: 'Credit Card',
-              companyName: 'Company Name',
-              currency: webhookData.currency.toUpperCase() === 'PHP' ? 'PHP' : 'USD'
-            }
-          );
+          await emailService.sendPaymentConfirmationEmail(client.email, {
+            invoiceNumber: invoice.invoiceNumber,
+            clientName: client.clientName,
+            amountPaid: stripeService.formatAmount(webhookData.amount, webhookData.currency),
+            paymentDate: new Date().toISOString(),
+            paymentMethod: 'Credit Card',
+            companyName: 'Company Name',
+            currency: webhookData.currency.toUpperCase() === 'PHP' ? 'PHP' : 'USD',
+          });
         } catch (emailError) {
           // Email error handled silently
         }
       }
     }
-
   } catch (error) {
     throw error;
   }
@@ -139,7 +138,7 @@ async function handlePaymentFailure(webhookData: any) {
       .update(invoices)
       .set({
         status: 'overdue',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(invoices.id, parseInt(webhookData.invoiceId)));
 
@@ -147,13 +146,12 @@ async function handlePaymentFailure(webhookData: any) {
     const invoiceData = await db
       .select({
         invoice: invoices,
-        client: clients
+        client: clients,
       })
       .from(invoices)
       .leftJoin(clients, eq(invoices.clientId, clients.id))
       .where(eq(invoices.id, parseInt(webhookData.invoiceId)))
       .limit(1);
-
   } catch (error) {
     throw error;
   }
@@ -173,10 +171,9 @@ async function handlePaymentCancellation(webhookData: any) {
       .update(invoices)
       .set({
         status: 'pending',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(invoices.id, parseInt(webhookData.invoiceId)));
-
   } catch (error) {
     throw error;
   }
@@ -199,7 +196,7 @@ async function handleCheckoutSessionCompleted(event: StripeWebhookEvent) {
       .update(invoices)
       .set({
         status: 'paid',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(invoices.id, parseInt(invoiceId)));
 
@@ -207,7 +204,7 @@ async function handleCheckoutSessionCompleted(event: StripeWebhookEvent) {
     const invoiceData = await db
       .select({
         invoice: invoices,
-        client: clients
+        client: clients,
       })
       .from(invoices)
       .leftJoin(clients, eq(invoices.clientId, clients.id))
@@ -216,28 +213,24 @@ async function handleCheckoutSessionCompleted(event: StripeWebhookEvent) {
 
     if (invoiceData.length > 0) {
       const { invoice, client } = invoiceData[0];
-      
+
       // Send payment confirmation email
       if (client?.email) {
         try {
-          await emailService.sendPaymentConfirmationEmail(
-            client.email,
-            {
-              invoiceNumber: invoice.invoiceNumber,
-              clientName: client.clientName,
-              amountPaid: `${session.currency?.toUpperCase() || 'USD'} ${(session.amount_total / 100).toFixed(2)}`,
-              paymentDate: new Date().toISOString(),
-              paymentMethod: 'Payment Link',
-              companyName: 'Company Name',
-              currency: session.currency?.toUpperCase() === 'PHP' ? 'PHP' : 'USD'
-            }
-          );
+          await emailService.sendPaymentConfirmationEmail(client.email, {
+            invoiceNumber: invoice.invoiceNumber,
+            clientName: client.clientName,
+            amountPaid: `${session.currency?.toUpperCase() || 'USD'} ${(session.amount_total / 100).toFixed(2)}`,
+            paymentDate: new Date().toISOString(),
+            paymentMethod: 'Payment Link',
+            companyName: 'Company Name',
+            currency: session.currency?.toUpperCase() === 'PHP' ? 'PHP' : 'USD',
+          });
         } catch (emailError) {
           // Email error handled silently
         }
       }
     }
-
   } catch (error) {
     throw error;
   }

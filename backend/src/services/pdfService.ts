@@ -27,18 +27,18 @@ export class PDFService {
   private formatCurrency(amount: number, currency: 'USD' | 'PHP' = 'USD'): string {
     const currencySymbols = {
       USD: '$',
-      PHP: '₱'
+      PHP: '₱',
     };
-    
+
     return `${currencySymbols[currency]}${amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     })}`;
   }
 
   private generateInvoiceHTML(invoiceData: InvoiceData): string {
     const currency = invoiceData.currency || 'USD';
-    
+
     return `
     <!DOCTYPE html>
     <html>
@@ -229,14 +229,18 @@ export class PDFService {
           </tr>
         </thead>
         <tbody>
-          ${invoiceData.items.map(item => `
+          ${invoiceData.items
+            .map(
+              item => `
             <tr>
               <td>${item.description}</td>
               <td>${item.quantity}</td>
               <td>${this.formatCurrency(item.unitPrice, currency)}</td>
               <td>${this.formatCurrency(item.total, currency)}</td>
             </tr>
-          `).join('')}
+          `
+            )
+            .join('')}
         </tbody>
       </table>
       
@@ -250,12 +254,16 @@ export class PDFService {
         </div>
       </div>
       
-      ${invoiceData.notes ? `
+      ${
+        invoiceData.notes
+          ? `
         <div class="notes">
           <h4>Notes:</h4>
           <p>${invoiceData.notes}</p>
         </div>
-      ` : ''}
+      `
+          : ''
+      }
       
       <div class="footer">
         <p>Thank you for your business!</p>
@@ -268,33 +276,35 @@ export class PDFService {
 
   async generateInvoicePDF(invoiceData: InvoiceData): Promise<Buffer> {
     let browser;
-    
+
     try {
       browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
-      
+
       const page = await browser.newPage();
       const html = this.generateInvoiceHTML(invoiceData);
-      
+
       await page.setContent(html, { waitUntil: 'networkidle0' });
-      
+
       const pdfBuffer = await page.pdf({
         format: 'A4',
         margin: {
           top: '20px',
           right: '20px',
           bottom: '20px',
-          left: '20px'
+          left: '20px',
         },
-        printBackground: true
+        printBackground: true,
       });
-      
+
       return Buffer.from(pdfBuffer);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       if (browser) {
         await browser.close();
@@ -318,16 +328,16 @@ export class PDFService {
     }>;
   }): Promise<Buffer> {
     let browser;
-    
+
     try {
       browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
-      
+
       const page = await browser.newPage();
       const currency = reportData.currency || 'USD';
-      
+
       const html = `
       <!DOCTYPE html>
       <html>
@@ -464,7 +474,9 @@ export class PDFService {
           </div>
         </div>
         
-        ${reportData.clientBreakdown.length > 0 ? `
+        ${
+          reportData.clientBreakdown.length > 0
+            ? `
           <div class="breakdown-section">
             <h2>Client Breakdown</h2>
             <table class="breakdown-table">
@@ -476,17 +488,23 @@ export class PDFService {
                 </tr>
               </thead>
               <tbody>
-                ${reportData.clientBreakdown.map(client => `
+                ${reportData.clientBreakdown
+                  .map(
+                    client => `
                   <tr>
                     <td>${client.clientName}</td>
                     <td>${this.formatCurrency(client.totalAmount, currency)}</td>
                     <td>${client.invoiceCount}</td>
                   </tr>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </tbody>
             </table>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
         <div class="footer">
           <p>Generated on ${new Date().toLocaleDateString()}</p>
@@ -494,24 +512,26 @@ export class PDFService {
       </body>
       </html>
       `;
-      
+
       await page.setContent(html, { waitUntil: 'networkidle0' });
-      
+
       const pdfBuffer = await page.pdf({
         format: 'A4',
         margin: {
           top: '20px',
           right: '20px',
           bottom: '20px',
-          left: '20px'
+          left: '20px',
         },
-        printBackground: true
+        printBackground: true,
       });
-      
+
       return Buffer.from(pdfBuffer);
     } catch (error) {
       console.error('Error generating report PDF:', error);
-      throw new Error(`Failed to generate report PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate report PDF: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       if (browser) {
         await browser.close();

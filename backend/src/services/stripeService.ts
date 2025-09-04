@@ -29,11 +29,15 @@ class StripeService {
   /**
    * Create a payment intent for an invoice
    */
-  async createPaymentIntent(invoice: Invoice, currency: string = 'usd', clientEmail?: string): Promise<PaymentIntent> {
+  async createPaymentIntent(
+    invoice: Invoice,
+    currency: string = 'usd',
+    clientEmail?: string
+  ): Promise<PaymentIntent> {
     try {
       // Convert amount to cents (Stripe expects smallest currency unit)
       const amountInCents = Math.round(parseFloat(invoice.totalAmount.toString()) * 100);
-      
+
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amountInCents,
         currency: currency.toLowerCase(),
@@ -67,7 +71,7 @@ class StripeService {
   async getPaymentIntent(paymentIntentId: string): Promise<PaymentIntent> {
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
+
       return {
         id: paymentIntent.id,
         client_secret: paymentIntent.client_secret!,
@@ -128,7 +132,9 @@ class StripeService {
       const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
       return event as StripeWebhookEvent;
     } catch (error: any) {
-      throw new Error(`Webhook signature verification failed: ${error?.message || 'Unknown error'}`);
+      throw new Error(
+        `Webhook signature verification failed: ${error?.message || 'Unknown error'}`
+      );
     }
   }
 
@@ -137,14 +143,14 @@ class StripeService {
    */
   getSupportedCurrencies(): { [key: string]: string } {
     return {
-      'usd': 'US Dollar',
-      'php': 'Philippine Peso',
-      'eur': 'Euro',
-      'gbp': 'British Pound',
-      'cad': 'Canadian Dollar',
-      'aud': 'Australian Dollar',
-      'jpy': 'Japanese Yen',
-      'sgd': 'Singapore Dollar',
+      usd: 'US Dollar',
+      php: 'Philippine Peso',
+      eur: 'Euro',
+      gbp: 'British Pound',
+      cad: 'Canadian Dollar',
+      aud: 'Australian Dollar',
+      jpy: 'Japanese Yen',
+      sgd: 'Singapore Dollar',
     };
   }
 
@@ -153,7 +159,7 @@ class StripeService {
    */
   formatAmount(amount: number, currency: string): string {
     const amountInDollars = amount / 100; // Convert from cents
-    
+
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency.toUpperCase(),
@@ -164,14 +170,17 @@ class StripeService {
   /**
    * Create a payment link for an invoice (alternative to payment intent)
    */
-  async createPaymentLink(invoice: Invoice, currency?: string): Promise<{ url: string; id: string }> {
+  async createPaymentLink(
+    invoice: Invoice,
+    currency?: string
+  ): Promise<{ url: string; id: string }> {
     try {
       // Use invoice currency if available, otherwise use the provided currency or default to PHP
       const invoiceCurrency = (invoice as any).currency || currency || 'php';
-      
+
       // Convert amount to cents
       const amountInCents = Math.round(parseFloat(invoice.totalAmount.toString()) * 100);
-      
+
       // First create a product
       const product = await stripe.products.create({
         name: `Invoice ${invoice.invoiceNumber}`,

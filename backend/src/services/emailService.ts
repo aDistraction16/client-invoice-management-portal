@@ -30,7 +30,7 @@ export class EmailService {
         from: this.fromEmail,
         subject: options.subject,
         html: options.html,
-        attachments: options.attachments
+        attachments: options.attachments,
       };
 
       await sgMail.send(msg);
@@ -53,7 +53,7 @@ export class EmailService {
     pdfBuffer?: Buffer
   ): Promise<boolean> {
     const currencySymbol = invoiceData.currency === 'PHP' ? '₱' : '$';
-    
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -156,12 +156,16 @@ export class EmailService {
             <div>${currencySymbol}${invoiceData.totalAmount}</div>
           </div>
 
-          ${pdfBuffer ? `
+          ${
+            pdfBuffer
+              ? `
           <div class="attachment-notice">
             <strong>📎 Invoice PDF Attached</strong><br>
             Please find your detailed invoice attached as a PDF file.
           </div>
-          ` : ''}
+          `
+              : ''
+          }
           
           <p>Please review the invoice details and arrange payment by the due date. We appreciate your prompt attention to this matter.</p>
           
@@ -184,16 +188,18 @@ export class EmailService {
     const emailOptions: EmailOptions = {
       to: clientEmail,
       subject: `📧 Invoice ${invoiceData.invoiceNumber} - ${currencySymbol}${invoiceData.totalAmount} Due ${new Date(invoiceData.dueDate).toLocaleDateString()}`,
-      html
+      html,
     };
 
     // Add PDF attachment if provided
     if (pdfBuffer) {
-      emailOptions.attachments = [{
-        content: pdfBuffer.toString('base64'),
-        filename: `invoice-${invoiceData.invoiceNumber}.pdf`,
-        type: 'application/pdf'
-      }];
+      emailOptions.attachments = [
+        {
+          content: pdfBuffer.toString('base64'),
+          filename: `invoice-${invoiceData.invoiceNumber}.pdf`,
+          type: 'application/pdf',
+        },
+      ];
     }
 
     return this.sendEmail(emailOptions);
@@ -213,7 +219,7 @@ export class EmailService {
   ): Promise<boolean> {
     const currencySymbol = invoiceData.currency === 'PHP' ? '₱' : '$';
     const isOverdue = invoiceData.daysPastDue > 0;
-    
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -295,17 +301,21 @@ export class EmailService {
           
           <p>Dear <strong>${invoiceData.clientName}</strong>,</p>
           
-          ${isOverdue ? `
+          ${
+            isOverdue
+              ? `
           <div class="urgency-notice">
             ⚠️ URGENT: This invoice is ${invoiceData.daysPastDue} days overdue
           </div>
           <p>This is an urgent reminder that your invoice payment is <strong>${invoiceData.daysPastDue} days past due</strong>. Immediate action is required to avoid any service interruptions or late fees.</p>
-          ` : `
+          `
+              : `
           <div class="urgency-notice">
             📅 This invoice payment is due today
           </div>
           <p>This is a friendly reminder that your invoice payment is <strong>due today</strong>. Please arrange payment to avoid any late fees.</p>
-          `}
+          `
+          }
           
           <div class="invoice-details">
             <p><strong>📄 Invoice Number:</strong> ${invoiceData.invoiceNumber}</p>
@@ -343,7 +353,7 @@ export class EmailService {
     return this.sendEmail({
       to: clientEmail,
       subject: `${isOverdue ? '🚨 URGENT' : '⏰'} Payment Reminder - Invoice ${invoiceData.invoiceNumber} ${isOverdue ? `(${invoiceData.daysPastDue} days overdue)` : '(Due Today)'}`,
-      html
+      html,
     });
   }
 
@@ -360,7 +370,7 @@ export class EmailService {
     }
   ): Promise<boolean> {
     const currencySymbol = paymentData.currency === 'PHP' ? '₱' : '$';
-    
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -483,7 +493,7 @@ export class EmailService {
     return this.sendEmail({
       to: clientEmail,
       subject: `✅ Payment Confirmed - Invoice ${paymentData.invoiceNumber} (${currencySymbol}${paymentData.amountPaid})`,
-      html
+      html,
     });
   }
 }

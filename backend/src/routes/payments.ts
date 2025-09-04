@@ -22,7 +22,7 @@ router.post('/create-payment-intent', async (req: Request, res: Response) => {
     if (!invoiceId) {
       return res.status(400).json({
         message: 'Invoice ID is required',
-        error: 'INVALID_REQUEST'
+        error: 'INVALID_REQUEST',
       });
     }
 
@@ -30,7 +30,7 @@ router.post('/create-payment-intent', async (req: Request, res: Response) => {
     const invoiceData = await db
       .select({
         invoice: invoices,
-        client: clients
+        client: clients,
       })
       .from(invoices)
       .leftJoin(clients, eq(invoices.clientId, clients.id))
@@ -40,7 +40,7 @@ router.post('/create-payment-intent', async (req: Request, res: Response) => {
     if (!invoiceData.length) {
       return res.status(404).json({
         message: 'Invoice not found',
-        error: 'INVOICE_NOT_FOUND'
+        error: 'INVOICE_NOT_FOUND',
       });
     }
 
@@ -50,7 +50,7 @@ router.post('/create-payment-intent', async (req: Request, res: Response) => {
     if (invoice.userId !== req.user!.id) {
       return res.status(403).json({
         message: 'Access denied',
-        error: 'UNAUTHORIZED'
+        error: 'UNAUTHORIZED',
       });
     }
 
@@ -64,9 +64,9 @@ router.post('/create-payment-intent', async (req: Request, res: Response) => {
     // Update invoice with payment link
     await db
       .update(invoices)
-      .set({ 
+      .set({
         paymentLink: `https://dashboard.stripe.com/payments/${paymentIntent.id}`,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(invoices.id, invoiceId));
 
@@ -74,15 +74,14 @@ router.post('/create-payment-intent', async (req: Request, res: Response) => {
       message: 'Payment intent created successfully',
       data: {
         paymentIntent,
-        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
-      }
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      },
     });
-
   } catch (error: any) {
     console.error('❌ Error creating payment intent:', error);
     res.status(500).json({
       message: 'Failed to create payment intent',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -98,7 +97,7 @@ router.post('/create-payment-link', async (req: Request, res: Response) => {
     if (!invoiceId) {
       return res.status(400).json({
         message: 'Invoice ID is required',
-        error: 'INVALID_REQUEST'
+        error: 'INVALID_REQUEST',
       });
     }
 
@@ -112,7 +111,7 @@ router.post('/create-payment-link', async (req: Request, res: Response) => {
     if (!invoiceResult.length) {
       return res.status(404).json({
         message: 'Invoice not found',
-        error: 'INVOICE_NOT_FOUND'
+        error: 'INVOICE_NOT_FOUND',
       });
     }
 
@@ -123,7 +122,7 @@ router.post('/create-payment-link', async (req: Request, res: Response) => {
     if (invoice.userId !== userId) {
       return res.status(403).json({
         message: 'Access denied',
-        error: 'UNAUTHORIZED'
+        error: 'UNAUTHORIZED',
       });
     }
 
@@ -133,24 +132,23 @@ router.post('/create-payment-link', async (req: Request, res: Response) => {
     // Update invoice with payment link
     await db
       .update(invoices)
-      .set({ 
+      .set({
         paymentLink: paymentLink.url,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(invoices.id, invoiceId));
 
     res.json({
       message: 'Payment link created successfully',
       data: {
-        paymentLink
-      }
+        paymentLink,
+      },
     });
-
   } catch (error: any) {
     console.error('❌ Error creating payment link:', error);
     res.status(500).json({
       message: 'Failed to create payment link',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -173,7 +171,7 @@ router.get('/status/:invoiceId', async (req: Request, res: Response) => {
     if (!invoiceResult.length) {
       return res.status(404).json({
         message: 'Invoice not found',
-        error: 'INVOICE_NOT_FOUND'
+        error: 'INVOICE_NOT_FOUND',
       });
     }
 
@@ -183,7 +181,7 @@ router.get('/status/:invoiceId', async (req: Request, res: Response) => {
     if (invoice.userId !== req.user!.id) {
       return res.status(403).json({
         message: 'Access denied',
-        error: 'UNAUTHORIZED'
+        error: 'UNAUTHORIZED',
       });
     }
 
@@ -193,15 +191,14 @@ router.get('/status/:invoiceId', async (req: Request, res: Response) => {
         invoiceId: invoice.id,
         status: invoice.status,
         paymentLink: invoice.paymentLink,
-        totalAmount: invoice.totalAmount
-      }
+        totalAmount: invoice.totalAmount,
+      },
     });
-
   } catch (error: any) {
     console.error('❌ Error getting payment status:', error);
     res.status(500).json({
       message: 'Failed to get payment status',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -213,18 +210,17 @@ router.get('/status/:invoiceId', async (req: Request, res: Response) => {
 router.get('/currencies', async (req: Request, res: Response) => {
   try {
     const currencies = stripeService.getSupportedCurrencies();
-    
+
     res.json({
       message: 'Supported currencies retrieved successfully',
       data: {
-        currencies
-      }
+        currencies,
+      },
     });
-
   } catch (error: any) {
     res.status(500).json({
       message: 'Failed to get supported currencies',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -240,7 +236,7 @@ router.post('/cancel/:paymentIntentId', async (req: Request, res: Response) => {
     if (!paymentIntentId) {
       return res.status(400).json({
         message: 'Payment intent ID is required',
-        error: 'INVALID_REQUEST'
+        error: 'INVALID_REQUEST',
       });
     }
 
@@ -255,14 +251,13 @@ router.post('/cancel/:paymentIntentId', async (req: Request, res: Response) => {
       message: 'Payment intent cancelled successfully',
       data: {
         paymentIntentId,
-        status: 'cancelled'
-      }
+        status: 'cancelled',
+      },
     });
-
   } catch (error: any) {
     res.status(500).json({
       message: 'Failed to cancel payment intent',
-      error: error.message
+      error: error.message,
     });
   }
 });
