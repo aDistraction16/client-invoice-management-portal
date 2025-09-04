@@ -11,23 +11,31 @@ const router = Router();
 // Validation schemas
 const createInvoiceSchema = Joi.object({
   clientId: Joi.number().integer().positive().required(),
-  issueDate: Joi.date().required(),
-  dueDate: Joi.date().required(),
+  issueDate: Joi.string().required(), // Accept as string
+  dueDate: Joi.string().required(), // Accept as string
   items: Joi.array().items(
     Joi.object({
       description: Joi.string().required(),
-      quantity: Joi.number().positive().precision(2).required(),
-      unitPrice: Joi.number().positive().precision(2).required()
+      quantity: Joi.number().positive().required(),
+      unitPrice: Joi.number().positive().required()
     })
   ).min(1).required(),
-  notes: Joi.string().optional()
+  notes: Joi.string().allow('').optional()
 });
 
 const updateInvoiceSchema = Joi.object({
-  issueDate: Joi.date().optional(),
-  dueDate: Joi.date().optional(),
+  clientId: Joi.number().integer().positive().optional(),
+  issueDate: Joi.string().optional(), // Accept as string
+  dueDate: Joi.string().optional(), // Accept as string
+  items: Joi.array().items(
+    Joi.object({
+      description: Joi.string().required(),
+      quantity: Joi.number().positive().required(),
+      unitPrice: Joi.number().positive().required()
+    })
+  ).min(1).optional(),
   status: Joi.string().valid('draft', 'sent', 'paid', 'overdue', 'cancelled').optional(),
-  notes: Joi.string().optional()
+  notes: Joi.string().allow('').optional()
 });
 
 const idParamSchema = Joi.object({
@@ -218,7 +226,7 @@ router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(upda
       return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
     }
     const invoiceId = parseInt(req.params.id);
-    const updateData = req.body;
+    const { items, clientId, ...updateData } = req.body;
 
     // Check if invoice exists and belongs to user
     const existingInvoice = await db.select()
@@ -234,11 +242,44 @@ router.put('/:id', requireAuth, validateParams(idParamSchema), validateBody(upda
       });
     }
 
-    // Update invoice
+    // Prepare invoice update data - only include valid invoice table fields
+    const invoiceUpdateData: any = {
+      updatedAt: new Date()
+    };
+
+    // Only include fields that exist in the invoice table
+    if (updateData.issueDate) invoiceUpdateData.issueDate = updateData.issueDate;
+    if (updateData.dueDate) invoiceUpdateData.dueDate = updateData.dueDate;
+    if (updateData.status) invoiceUpdateData.status = updateData.status;
+    if (updateData.notes !== undefined) invoiceUpdateData.notes = updateData.notes;
+
+    // Calculate total if items are provided
+    if (items && items.length > 0) {
+      invoiceUpdateData.totalAmount = calculateTotal(items).toString();
+    }
+
+    // Update invoice basic info
     const updatedInvoice = await db.update(invoices)
-      .set({ ...updateData, updatedAt: new Date() })
+      .set(invoiceUpdateData)
       .where(eq(invoices.id, invoiceId))
       .returning();
+
+    // If items are provided, update them
+    if (items && items.length > 0) {
+      // Delete existing items
+      await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId));
+      
+      // Insert new items
+      const itemsToInsert = items.map((item: any) => ({
+        invoiceId: invoiceId,
+        description: item.description,
+        quantity: item.quantity.toString(),
+        unitPrice: item.unitPrice.toString(),
+        total: (item.quantity * item.unitPrice).toString()
+      }));
+      
+      await db.insert(invoiceItems).values(itemsToInsert);
+    }
 
     res.json({
       message: 'Invoice updated successfully',

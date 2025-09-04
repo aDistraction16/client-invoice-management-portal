@@ -32,6 +32,7 @@ export const projects = pgTable('projects', {
   projectName: varchar('project_name', { length: 255 }).notNull(),
   description: text('description'),
   hourlyRate: decimal('hourly_rate', { precision: 10, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 3 }).default('PHP').notNull(), // USD, PHP, EUR, etc.
   status: varchar('status', { length: 50 }).default('active').notNull(), // active, completed, paused
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()

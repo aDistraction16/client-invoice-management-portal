@@ -11,15 +11,15 @@ const router = Router();
 // Validation schemas
 const createTimeEntrySchema = Joi.object({
   projectId: Joi.number().integer().positive().required(),
-  date: Joi.date().required(),
-  hoursLogged: Joi.number().positive().precision(2).required(),
-  description: Joi.string().optional()
+  date: Joi.string().required(), // Accept as string, will be converted to Date
+  hoursLogged: Joi.number().positive().required(),
+  description: Joi.string().allow('').optional()
 });
 
 const updateTimeEntrySchema = Joi.object({
-  date: Joi.date().optional(),
-  hoursLogged: Joi.number().positive().precision(2).optional(),
-  description: Joi.string().optional()
+  date: Joi.string().optional(), // Accept as string, will be converted to Date
+  hoursLogged: Joi.number().positive().optional(),
+  description: Joi.string().allow('').optional()
 });
 
 const idParamSchema = Joi.object({

@@ -12,15 +12,17 @@ const router = Router();
 const createProjectSchema = Joi.object({
   clientId: Joi.number().integer().positive().required(),
   projectName: Joi.string().required(),
-  description: Joi.string().optional(),
-  hourlyRate: Joi.number().positive().precision(2).required(),
+  description: Joi.string().allow('').optional(),
+  hourlyRate: Joi.number().positive().required(),
+  currency: Joi.string().valid('USD', 'PHP').default('PHP'),
   status: Joi.string().valid('active', 'completed', 'paused').default('active')
 });
 
 const updateProjectSchema = Joi.object({
   projectName: Joi.string().optional(),
-  description: Joi.string().optional(),
-  hourlyRate: Joi.number().positive().precision(2).optional(),
+  description: Joi.string().allow('').optional(),
+  hourlyRate: Joi.number().positive().optional(),
+  currency: Joi.string().valid('USD', 'PHP').optional(),
   status: Joi.string().valid('active', 'completed', 'paused').optional()
 });
 

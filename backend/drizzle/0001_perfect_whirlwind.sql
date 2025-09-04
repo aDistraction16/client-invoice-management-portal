@@ -1,0 +1,1 @@
+ALTER TABLE "projects" ADD "currency" varchar(3) NOT NULL DEFAULT 'PHP';
