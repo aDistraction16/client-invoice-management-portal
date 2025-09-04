@@ -198,18 +198,6 @@ See `backend/.env.example` for all required environment variables:
 - **Caching**: Redis session storage for fast authentication
 - **Real-time Updates**: Webhook-driven status synchronization
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - [Stripe](https://stripe.com/) for payment processing
@@ -218,7 +206,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Drizzle ORM](https://orm.drizzle.team/) for database operations
 
 ---
-
-**Developed by [Your Name]** - *Full-Stack Developer*
-
-[Portfolio](your-portfolio-url) | [LinkedIn](your-linkedin-url) | [Email](mailto:your-email@domain.com)
