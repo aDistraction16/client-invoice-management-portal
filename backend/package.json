@@ -23,6 +23,8 @@
   "license": "PRIVATE",
   "dependencies": {
     "@sendgrid/mail": "^7.7.0",
+    "@types/puppeteer": "^5.4.7",
+    "@types/stripe": "^8.0.416",
     "bcryptjs": "^2.4.3",
     "connect-redis": "^7.1.0",
     "cors": "^2.8.5",
@@ -32,10 +34,13 @@
     "express-rate-limit": "^6.9.0",
     "express-session": "^1.17.3",
     "helmet": "^7.0.0",
+    "html-pdf-node": "^1.0.8",
     "joi": "^17.9.2",
     "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2",
     "pdfkit": "^0.14.0",
     "pg": "^8.11.3",
+    "puppeteer": "^24.18.0",
     "redis": "^4.6.7",
     "stripe": "^12.18.0",
     "uuid": "^9.0.0"

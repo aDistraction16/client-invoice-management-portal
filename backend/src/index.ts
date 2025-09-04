@@ -14,6 +14,9 @@ import clientRoutes from './routes/clients';
 import projectRoutes from './routes/projects';
 import timeEntryRoutes from './routes/timeEntries';
 import invoiceRoutes from './routes/invoices';
+import paymentRoutes from './routes/payments';
+import webhookRoutes from './routes/webhooks';
+import paymentStatusRoutes from './routes/paymentStatus';
 
 // Load environment variables
 dotenv.config();
@@ -23,11 +26,33 @@ const PORT = process.env.PORT || 3001;
 
 // Redis client setup
 const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
+  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  socket: {
+    reconnectStrategy: (retries) => Math.min(retries * 50, 500)
+  }
 });
 
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
-redisClient.connect();
+redisClient.on('error', (err) => {
+  console.error('❌ Redis Client Error:', err);
+});
+
+redisClient.on('connect', () => {
+  console.log('✅ Connected to Redis');
+});
+
+redisClient.on('reconnecting', () => {
+  console.log('🔄 Reconnecting to Redis...');
+});
+
+redisClient.on('ready', () => {
+  console.log('✅ Redis client ready');
+});
+
+// Connect to Redis with error handling
+redisClient.connect().catch((err) => {
+  console.error('❌ Failed to connect to Redis:', err);
+  process.exit(1);
+});
 
 // Rate limiting
 const limiter = rateLimit({
@@ -45,19 +70,27 @@ app.use(limiter);
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// Webhook routes MUST come before express.json() to preserve raw body
+app.use('/api/webhooks', webhookRoutes);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration
 app.use(session({
-  store: new RedisStore({ client: redisClient }),
+  store: new RedisStore({ 
+    client: redisClient,
+    prefix: 'invoice:sess:',
+    ttl: 86400 * 7 // 7 days in seconds
+  }),
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // Reset expiration on activity
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
@@ -72,7 +105,17 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV 
+    environment: process.env.NODE_ENV,
+    redis: redisClient.isReady ? 'connected' : 'disconnected'
+  });
+});
+
+// Session health check
+app.get('/api/session-check', (req, res) => {
+  res.json({
+    authenticated: !!req.session.userId,
+    sessionId: req.sessionID,
+    userId: req.session.userId || null
   });
 });
 
@@ -82,6 +125,9 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/time-entries', timeEntryRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/payment-status', paymentStatusRoutes);
+// Note: webhooks already registered above before JSON middleware
 
 // Error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {

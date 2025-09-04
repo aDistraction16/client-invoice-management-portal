@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: invoice_portal
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
+      POSTGRES_PASSWORD: malbarroso
     ports:
       - "5432:5432"
     volumes:

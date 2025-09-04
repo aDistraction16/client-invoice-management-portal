@@ -59,6 +59,7 @@ export const invoices = pgTable('invoices', {
   issueDate: date('issue_date').notNull(),
   dueDate: date('due_date').notNull(),
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 3 }).default('PHP').notNull(), // USD, PHP, EUR, etc.
   status: varchar('status', { length: 50 }).default('draft').notNull(), // draft, sent, paid, overdue, cancelled
   paymentLink: varchar('payment_link', { length: 500 }),
   notes: text('notes'),

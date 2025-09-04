@@ -12,6 +12,7 @@ import Projects from './components/projects/Projects';
 import TimeEntries from './components/timeEntries/TimeEntries';
 import Invoices from './components/invoices/Invoices';
 import UserProfile from './components/profile/UserProfile';
+import PaymentSuccess from './components/payments/PaymentSuccess';
 
 const theme = createTheme({
   palette: {
@@ -29,6 +30,9 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
+      {/* Public payment success route - accessible without authentication */}
+      <Route path="/invoices/:invoiceId/payment-success" element={<PaymentSuccess />} />
+      
       {!user ? (
         <>
           <Route path="/login" element={<Login />} />

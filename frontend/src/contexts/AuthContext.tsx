@@ -94,24 +94,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkAuth = async () => {
       dispatch({ type: 'AUTH_START' });
       try {
+        // Try localStorage first for faster initial load
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          dispatch({ type: 'AUTH_SUCCESS', payload: parsedUser });
+        }
+
+        // Verify with backend session
         const response = await authAPI.getCurrentUser();
         dispatch({ type: 'AUTH_SUCCESS', payload: response.user });
+        localStorage.setItem('user', JSON.stringify(response.user));
       } catch (error) {
+        console.warn('⚠️ Auth check failed:', error);
+        // Clear any stale data
+        localStorage.removeItem('user');
         dispatch({ type: 'AUTH_FAILURE', payload: 'Not authenticated' });
       }
     };
 
     checkAuth();
-  }, []);
+
+    // Set up periodic session health checks
+    const sessionCheckInterval = setInterval(async () => {
+      if (state.isAuthenticated) {
+        try {
+          await authAPI.getCurrentUser();
+        } catch (error) {
+          console.warn('🔐 Session expired - logging out');
+          localStorage.removeItem('user');
+          dispatch({ type: 'AUTH_LOGOUT' });
+        }
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
+    return () => clearInterval(sessionCheckInterval);
+  }, [state.isAuthenticated]);
 
   const login = async (data: LoginFormData): Promise<void> => {
     dispatch({ type: 'AUTH_START' });
     try {
       const response = await authAPI.login(data);
       dispatch({ type: 'AUTH_SUCCESS', payload: response.user });
+      localStorage.setItem('user', JSON.stringify(response.user));
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Login failed';
       dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
+      localStorage.removeItem('user');
       throw error;
     }
   };
@@ -121,9 +150,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authAPI.register(data);
       dispatch({ type: 'AUTH_SUCCESS', payload: response.user });
+      localStorage.setItem('user', JSON.stringify(response.user));
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
       dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
+      localStorage.removeItem('user');
       throw error;
     }
   };
@@ -134,6 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      localStorage.removeItem('user');
       dispatch({ type: 'AUTH_LOGOUT' });
     }
   };

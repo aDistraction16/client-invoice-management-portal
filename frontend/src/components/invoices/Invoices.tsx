@@ -36,11 +36,16 @@ import {
   Payment as PaymentIcon,
   Person as PersonIcon,
   Visibility as ViewIcon,
+  PictureAsPdf as PdfIcon,
+  NotificationsActive as ReminderIcon,
+  Undo as UndoIcon,
+  ChangeCircle as ChangeStatusIcon,
 } from '@mui/icons-material';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import { invoicesAPI, clientsAPI, timeEntriesAPI, projectsAPI } from '../../services/api';
+import api, { invoicesAPI, clientsAPI, timeEntriesAPI, projectsAPI } from '../../services/api';
 import { Invoice, InvoiceFormData, InvoiceItemFormData, Client, TimeEntry, Project } from '../../types';
 import { formatDate, formatCurrency } from '../../utils';
+import PaymentLinkDialog from '../payments/PaymentLinkDialog';
 
 const Invoices: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -49,11 +54,18 @@ const Invoices: React.FC = () => {
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [statusChangeDialogOpen, setStatusChangeDialogOpen] = useState(false);
+  const [invoiceToChangeStatus, setInvoiceToChangeStatus] = useState<Invoice | null>(null);
+  const [newStatus, setNewStatus] = useState<string>('');
+  const [statusChangeReason, setStatusChangeReason] = useState<string>('');
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [invoiceForPayment, setInvoiceForPayment] = useState<Invoice | null>(null);
 
   const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<InvoiceFormData>({
     defaultValues: {
@@ -249,6 +261,126 @@ const Invoices: React.FC = () => {
     setViewDialogOpen(true);
   };
 
+  const handleDownloadPDF = async (invoiceId: number, invoiceNumber: string) => {
+    try {
+      console.log('🔍 Downloading PDF for invoice:', invoiceId);
+      
+      // Use the base api instance instead of invoicesAPI
+      const response = await api.get(`/invoices/${invoiceId}/pdf`, {
+        responseType: 'blob', // Important for binary data
+      });
+
+      // Create blob from response data
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${invoiceNumber}.pdf`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ PDF downloaded successfully');
+    } catch (error: any) {
+      console.error('❌ Error downloading PDF:', error);
+      setError('Failed to download PDF. Please try again.');
+    }
+  };
+
+  const handleSendReminder = async (invoiceId: number, invoiceNumber: string) => {
+    try {
+      console.log('📧 Sending payment reminder for invoice:', invoiceId);
+      
+      const response = await api.post(`/invoices/${invoiceId}/remind`);
+      
+      if (response.data) {
+        setSuccess(`Payment reminder sent successfully for invoice ${invoiceNumber}`);
+        console.log('✅ Payment reminder sent:', response.data);
+      }
+    } catch (error: any) {
+      console.error('❌ Error sending reminder:', error);
+      setError('Failed to send payment reminder. Please try again.');
+    }
+  };
+
+  const handleStatusChange = (invoice: Invoice) => {
+    setInvoiceToChangeStatus(invoice);
+    setNewStatus(invoice.status);
+    setStatusChangeReason('');
+    setStatusChangeDialogOpen(true);
+  };
+
+  const handleStatusChangeSubmit = async () => {
+    if (!invoiceToChangeStatus || !newStatus) return;
+
+    try {
+      const response = await invoicesAPI.updateStatus(
+        invoiceToChangeStatus.id,
+        newStatus,
+        statusChangeReason || undefined
+      );
+
+      if (response) {
+        setSuccess(`Invoice status updated from ${response.previousStatus} to ${newStatus}`);
+        
+        // Update the invoice in the local state
+        setInvoices(prev => prev.map(inv => 
+          inv.id === invoiceToChangeStatus.id 
+            ? { ...inv, status: newStatus as any }
+            : inv
+        ));
+        
+        setStatusChangeDialogOpen(false);
+        setInvoiceToChangeStatus(null);
+      }
+    } catch (error: any) {
+      console.error('❌ Error updating status:', error);
+      setError('Failed to update invoice status. Please try again.');
+    }
+  };
+
+  const handleQuickStatusChange = async (invoice: Invoice, targetStatus: string) => {
+    try {
+      const response = await invoicesAPI.updateStatus(
+        invoice.id,
+        targetStatus,
+        `Quick status change from ${invoice.status} to ${targetStatus}`
+      );
+
+      if (response) {
+        setSuccess(`Invoice status updated to ${targetStatus}`);
+        
+        // Update the invoice in the local state
+        setInvoices(prev => prev.map(inv => 
+          inv.id === invoice.id 
+            ? { ...inv, status: targetStatus as any }
+            : inv
+        ));
+      }
+    } catch (error: any) {
+      console.error('❌ Error updating status:', error);
+      setError('Failed to update invoice status. Please try again.');
+    }
+  };
+
+  const handleCreatePaymentLink = (invoice: Invoice) => {
+    setInvoiceForPayment(invoice);
+    setPaymentDialogOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    // Refresh invoices to get updated payment status
+    fetchInvoices();
+    setSuccess('Payment link created successfully!');
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -273,6 +405,12 @@ const Invoices: React.FC = () => {
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+          {success}
         </Alert>
       )}
 
@@ -348,15 +486,61 @@ const Invoices: React.FC = () => {
                       </IconButton>
                     )}
                     {invoice.status === 'sent' && (
+                      <>
+                        <IconButton
+                          onClick={() => handleStatusUpdate(invoice.id, 'pay')}
+                          color="success"
+                          size="small"
+                          title="Mark as Paid"
+                        >
+                          <PaymentIcon />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleCreatePaymentLink(invoice)}
+                          color="info"
+                          size="small"
+                          title="Create Payment Link"
+                        >
+                          <PaymentIcon sx={{ fontSize: '1.2rem' }} />
+                        </IconButton>
+                      </>
+                    )}
+                    <IconButton
+                      onClick={() => handleDownloadPDF(invoice.id, invoice.invoiceNumber)}
+                      color="secondary"
+                      size="small"
+                      title="Download PDF"
+                    >
+                      <PdfIcon />
+                    </IconButton>
+                    {invoice.status === 'sent' && (
                       <IconButton
-                        onClick={() => handleStatusUpdate(invoice.id, 'pay')}
-                        color="success"
+                        onClick={() => handleSendReminder(invoice.id, invoice.invoiceNumber)}
+                        color="warning"
                         size="small"
-                        title="Mark as Paid"
+                        title="Send Payment Reminder"
                       >
-                        <PaymentIcon />
+                        <ReminderIcon />
                       </IconButton>
                     )}
+                    {(invoice.status === 'paid' || invoice.status === 'cancelled') && (
+                      <IconButton
+                        onClick={() => handleQuickStatusChange(invoice, 'sent')}
+                        color="info"
+                        size="small"
+                        title={`Revert to Sent (Undo ${invoice.status})`}
+                      >
+                        <UndoIcon />
+                      </IconButton>
+                    )}
+                    <IconButton
+                      onClick={() => handleStatusChange(invoice)}
+                      color="default"
+                      size="small"
+                      title="Change Status"
+                    >
+                      <ChangeStatusIcon />
+                    </IconButton>
                     <IconButton
                       onClick={() => handleOpen(invoice)}
                       color="primary"
@@ -646,6 +830,83 @@ const Invoices: React.FC = () => {
           <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Status Change Dialog */}
+      <Dialog open={statusChangeDialogOpen} onClose={() => setStatusChangeDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Change Invoice Status
+          {invoiceToChangeStatus && (
+            <Typography variant="subtitle2" color="textSecondary">
+              Invoice #{invoiceToChangeStatus.invoiceNumber}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>New Status</InputLabel>
+              <Select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                label="New Status"
+              >
+                <MenuItem value="draft">
+                  <Chip label="Draft" color="default" size="small" sx={{ mr: 1 }} />
+                  Draft
+                </MenuItem>
+                <MenuItem value="sent">
+                  <Chip label="Sent" color="info" size="small" sx={{ mr: 1 }} />
+                  Sent
+                </MenuItem>
+                <MenuItem value="paid">
+                  <Chip label="Paid" color="success" size="small" sx={{ mr: 1 }} />
+                  Paid
+                </MenuItem>
+                <MenuItem value="overdue">
+                  <Chip label="Overdue" color="error" size="small" sx={{ mr: 1 }} />
+                  Overdue
+                </MenuItem>
+                <MenuItem value="cancelled">
+                  <Chip label="Cancelled" color="default" size="small" sx={{ mr: 1 }} />
+                  Cancelled
+                </MenuItem>
+              </Select>
+            </FormControl>
+            
+            <TextField
+              fullWidth
+              label="Reason (Optional)"
+              multiline
+              rows={3}
+              value={statusChangeReason}
+              onChange={(e) => setStatusChangeReason(e.target.value)}
+              placeholder="Enter reason for status change..."
+              helperText="This will be added to the invoice notes"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setStatusChangeDialogOpen(false)}>Cancel</Button>
+          <Button 
+            onClick={handleStatusChangeSubmit}
+            variant="contained"
+            disabled={!newStatus || newStatus === invoiceToChangeStatus?.status}
+          >
+            Update Status
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Payment Link Dialog */}
+      <PaymentLinkDialog
+        open={paymentDialogOpen}
+        onClose={() => {
+          setPaymentDialogOpen(false);
+          setInvoiceForPayment(null);
+        }}
+        invoice={invoiceForPayment}
+        onSuccess={handlePaymentSuccess}
+      />
     </Box>
   );
 };

@@ -30,21 +30,12 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for logging
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
-    console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
-    
-    // Log the actual data being sent
-    if (config.data) {
-      console.log('📤 Request Data:');
-      console.log(JSON.stringify(config.data, null, 2));
-    }
-    
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -52,25 +43,30 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Response: ${response.status} ${response.config.url}`);
-    console.log('📥 Response Data:', response.data);
     return response;
   },
   (error) => {
-    console.error('❌ Response Error:', error.response?.status, error.response?.data || error.message);
-    
-    // Show detailed validation errors
-    if (error.response?.status === 400 && error.response?.data?.details) {
-      console.error('🔍 Validation Details:', error.response.data.details);
-      error.response.data.details.forEach((detail: any, index: number) => {
-        console.error(`   ${index + 1}. ${detail.message} (Path: ${detail.path?.join('.')})`);
-      });
-    }
-    
     // Handle authentication errors
     if (error.response?.status === 401) {
-      // Redirect to login or clear user context
-      window.location.href = '/login';
+      console.warn('🔐 Authentication required - redirecting to login');
+      
+      // Clear any stored auth state
+      localStorage.removeItem('user');
+      
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    
+    // Handle network errors
+    if (!error.response) {
+      console.error('🌐 Network Error - Check if backend is running');
+      
+      // Don't redirect on network errors, just show error
+      if (error.code === 'ERR_NETWORK') {
+        error.message = 'Network Error: Please check if the server is running';
+      }
     }
     
     return Promise.reject(error);
@@ -95,8 +91,21 @@ export const authAPI = {
   },
 
   getCurrentUser: async (): Promise<{ user: User }> => {
-    const response: AxiosResponse<{ user: User }> = await api.get('/auth/me');
-    return response.data;
+    try {
+      // Use session check endpoint for better reliability
+      const response: AxiosResponse<{ authenticated: boolean; user: User }> = await api.get('/session-check');
+      
+      if (!response.data.authenticated || !response.data.user) {
+        throw new Error('Not authenticated');
+      }
+      
+      return { user: response.data.user };
+    } catch (error) {
+      // Fallback to legacy endpoint if session-check fails
+      console.warn('⚠️ Session check failed, trying legacy endpoint:', error);
+      const response: AxiosResponse<{ user: User }> = await api.get('/auth/me');
+      return response.data;
+    }
   },
 };
 
@@ -235,6 +244,16 @@ export const invoicesAPI = {
 
   markAsPaid: async (id: number): Promise<{ invoice: Invoice; message: string }> => {
     const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.patch(`/invoices/${id}/pay`);
+    return response.data;
+  },
+
+  updateStatus: async (id: number, status: string, reason?: string): Promise<{ invoice: Invoice; message: string; previousStatus: string }> => {
+    const response: AxiosResponse<{ invoice: Invoice; message: string; previousStatus: string }> = await api.patch(`/invoices/${id}/status`, { status, reason });
+    return response.data;
+  },
+
+  sendReminder: async (id: number): Promise<{ message: string; daysPastDue: number; reminderType: string }> => {
+    const response: AxiosResponse<{ message: string; daysPastDue: number; reminderType: string }> = await api.post(`/invoices/${id}/remind`);
     return response.data;
   },
 };
