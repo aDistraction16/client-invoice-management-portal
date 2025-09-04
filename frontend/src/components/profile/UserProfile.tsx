@@ -61,7 +61,6 @@ const UserProfile: React.FC = () => {
       
       // Note: This would need a profile update endpoint in the backend
       // For now, we'll show a success message
-      console.log('Profile update data:', data);
       setSuccess('Profile updated successfully! (Note: Backend endpoint needed)');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update profile');
@@ -82,7 +81,6 @@ const UserProfile: React.FC = () => {
       }
 
       // Note: This would need a password change endpoint in the backend
-      console.log('Password change data:', { currentPassword: data.currentPassword, newPassword: data.newPassword });
       setSuccess('Password changed successfully! (Note: Backend endpoint needed)');
       resetPassword();
     } catch (err: any) {

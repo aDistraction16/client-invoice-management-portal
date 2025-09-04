@@ -49,8 +49,7 @@ const PaymentForm: React.FC<{
         const response = await api.get('/payments/currencies');
         setSupportedCurrencies(response.data.data.currencies);
       } catch (error) {
-        console.error('Failed to fetch currencies:', error);
-        // Fallback currencies
+        // Fallback currencies if fetch fails
         setSupportedCurrencies({
           'usd': 'US Dollar',
           'php': 'Philippine Peso'

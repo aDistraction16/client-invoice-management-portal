@@ -48,3 +48,39 @@ Thumbs.db
 
 # Redis dump
 dump.rdb
+
+# ============================================
+# PORTFOLIO CLEANUP - SENSITIVE & DEV FILES
+# ============================================
+
+# Environment files with real credentials
+backend/.env
+backend/.env.test
+frontend/.env.local
+
+# Development tools and executables
+*.exe
+stripe.exe
+
+# Project planning and AI-generated documentation
+[MERN]*.md
+docs/Phase*-*.md
+docs/Implementation-Guide.md
+
+# Development artifacts and test files
+backend/test-*.js
+backend/test-*.ts
+
+# Temporary and cache files
+.tmp/
+.cache/
+*.tmp
+*.temp
+
+# Development logs and debug files
+*debug.log*
+*error.log*
+*.log.*
+
+# Database backup files
+*.sql.backup

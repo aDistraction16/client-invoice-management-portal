@@ -46,17 +46,15 @@ const PaymentSuccess: React.FC = () => {
         
         // If still not paid, continue polling
         if (invoiceData.status !== 'paid') {
-          console.log('Invoice not yet paid, will poll again...');
+          // Invoice not yet paid, will poll again
         } else {
           // Payment confirmed, stop polling
-          console.log('Invoice payment confirmed!');
           if (pollInterval) {
             clearInterval(pollInterval);
             pollInterval = null;
           }
         }
       } catch (err: any) {
-        console.error('Error fetching invoice:', err);
         setError('Failed to fetch invoice details');
         if (pollInterval) {
           clearInterval(pollInterval);

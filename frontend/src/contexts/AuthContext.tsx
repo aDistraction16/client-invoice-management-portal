@@ -106,8 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         dispatch({ type: 'AUTH_SUCCESS', payload: response.user });
         localStorage.setItem('user', JSON.stringify(response.user));
       } catch (error) {
-        console.warn('⚠️ Auth check failed:', error);
-        // Clear any stale data
+        // Auth check failed - clear any stale data
         localStorage.removeItem('user');
         dispatch({ type: 'AUTH_FAILURE', payload: 'Not authenticated' });
       }
@@ -121,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           await authAPI.getCurrentUser();
         } catch (error) {
-          console.warn('🔐 Session expired - logging out');
+          // Session expired - logging out
           localStorage.removeItem('user');
           dispatch({ type: 'AUTH_LOGOUT' });
         }
@@ -163,7 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authAPI.logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      // Silent logout error handling
     } finally {
       localStorage.removeItem('user');
       dispatch({ type: 'AUTH_LOGOUT' });

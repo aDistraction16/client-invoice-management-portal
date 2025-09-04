@@ -49,15 +49,9 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
   // Set initial invoice when dialog opens and don't change it during re-renders
   useEffect(() => {
     if (open && invoice && !initialInvoice) {
-      console.log('🎯 Setting initial invoice:', invoice.id);
       setInitialInvoice(invoice);
     }
   }, [open, invoice, initialInvoice]);
-
-  // Debug state changes (remove these after testing)
-  useEffect(() => {
-    console.log('🔍 PaymentLink state changed to:', paymentLink);
-  }, [paymentLink]);
 
   // Don't render if no invoice is provided
   if (!invoice) {
@@ -72,59 +66,31 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
 
     setLoading(true);
     setError(null);
-    console.log('🔗 Creating payment link for invoice:', invoice.id, 'Currency:', currency);
 
     try {
       const response = await api.post('/payments/create-payment-link', {
         invoiceId: invoice.id,
         currency: currency
       });
-
-      console.log('✅ Payment link response:', response.data);
-      console.log('🔍 Response structure analysis:');
-      console.log('  - response.data.data:', response.data.data);
-      console.log('  - response.data.data?.paymentLink:', response.data.data?.paymentLink);
-      console.log('  - response.data.data?.paymentLink?.url:', response.data.data?.paymentLink?.url);
-      console.log('  - response.data.paymentLink:', response.data.paymentLink);
-      console.log('  - response.data.url:', response.data.url);
       
       // Handle different possible response structures
       let linkUrl = null;
       if (response.data.data?.paymentLink?.url) {
         linkUrl = response.data.data.paymentLink.url;
-        console.log('📍 Found link at: response.data.data.paymentLink.url');
       } else if (response.data.paymentLink?.url) {
         linkUrl = response.data.paymentLink.url;
-        console.log('📍 Found link at: response.data.paymentLink.url');
       } else if (response.data.paymentLink) {
         linkUrl = response.data.paymentLink;
-        console.log('📍 Found link at: response.data.paymentLink');
       } else if (response.data.url) {
         linkUrl = response.data.url;
-        console.log('📍 Found link at: response.data.url');
-      } else {
-        console.log('❌ No payment link found in any expected location');
-        console.log('📋 Full response.data structure:', JSON.stringify(response.data, null, 2));
       }
-
-      console.log('🔗 Final linkUrl:', linkUrl);
 
       if (linkUrl) {
-        console.log('🎉 About to call setPaymentLink with:', linkUrl);
         setPaymentLink(linkUrl);
-        console.log('✅ setPaymentLink called successfully');
-        // Don't call onSuccess yet - wait for user to close dialog
-        // onSuccess?.();
       } else {
-        console.error('❌ No payment link found in response:', response.data);
-        console.error('🔍 Available keys in response.data:', Object.keys(response.data));
-        if (response.data.data) {
-          console.error('🔍 Available keys in response.data.data:', Object.keys(response.data.data));
-        }
-        setError('Payment link not found in server response. Check console for details.');
+        setError('Payment link not found in server response');
       }
     } catch (error: any) {
-      console.error('❌ Error creating payment link:', error);
       setError(error.response?.data?.message || 'Failed to create payment link');
     } finally {
       setLoading(false);
@@ -152,7 +118,6 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
   };
 
   const handleClose = () => {
-    console.log('🚪 Dialog closing, resetting state');
     onClose();
     setPaymentLink(null);
     setError(null);
