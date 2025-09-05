@@ -43,7 +43,14 @@ import {
 } from '@mui/icons-material';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import api, { invoicesAPI, clientsAPI, timeEntriesAPI, projectsAPI } from '../../services/api';
-import { Invoice, InvoiceFormData, InvoiceItemFormData, Client, TimeEntry, Project } from '../../types';
+import {
+  Invoice,
+  InvoiceFormData,
+  InvoiceItemFormData,
+  Client,
+  TimeEntry,
+  Project,
+} from '../../types';
 import { formatDate, formatCurrency } from '../../utils';
 import PaymentLinkDialog from '../payments/PaymentLinkDialog';
 
@@ -67,7 +74,13 @@ const Invoices: React.FC = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [invoiceForPayment, setInvoiceForPayment] = useState<Invoice | null>(null);
 
-  const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<InvoiceFormData>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<InvoiceFormData>({
     defaultValues: {
       clientId: 0,
       issueDate: new Date().toISOString().split('T')[0],
@@ -91,7 +104,7 @@ const Invoices: React.FC = () => {
         invoicesAPI.getAll(),
         clientsAPI.getAll(),
         projectsAPI.getAll(),
-        timeEntriesAPI.getAll()
+        timeEntriesAPI.getAll(),
       ]);
       setInvoices(invoicesRes.invoices);
       setClients(clientsRes.clients);
@@ -118,7 +131,7 @@ const Invoices: React.FC = () => {
         items: invoice.items?.map(item => ({
           description: item.description,
           quantity: parseFloat(item.quantity),
-          unitPrice: parseFloat(item.unitPrice)
+          unitPrice: parseFloat(item.unitPrice),
         })) || [{ description: '', quantity: 1, unitPrice: 0 }],
         notes: invoice.notes || '',
       });
@@ -180,17 +193,18 @@ const Invoices: React.FC = () => {
       }
       await fetchInvoices();
     } catch (err: any) {
-      setError(err.response?.data?.message || `Failed to mark invoice as ${action === 'send' ? 'sent' : 'paid'}`);
+      setError(
+        err.response?.data?.message ||
+          `Failed to mark invoice as ${action === 'send' ? 'sent' : 'paid'}`
+      );
     }
   };
 
   const generateFromTimeEntries = () => {
-    const clientTimeEntries = timeEntries.filter(
-      entry => {
-        const client = clients.find(c => c.id === selectedClientId);
-        return client && entry.clientName === client.clientName;
-      }
-    );
+    const clientTimeEntries = timeEntries.filter(entry => {
+      const client = clients.find(c => c.id === selectedClientId);
+      return client && entry.clientName === client.clientName;
+    });
 
     if (clientTimeEntries.length === 0) {
       setError('No time entries found for this client');
@@ -242,16 +256,16 @@ const Invoices: React.FC = () => {
     // Find the most common currency used by this client's projects
     const clientProjects = projects.filter(p => p.clientId === clientId);
     if (clientProjects.length === 0) return 'PHP'; // Default to PHP
-    
+
     // Count currency usage
     const currencyCount: { [key: string]: number } = {};
     clientProjects.forEach(project => {
       const currency = project.currency || 'PHP';
       currencyCount[currency] = (currencyCount[currency] || 0) + 1;
     });
-    
+
     // Return the most used currency
-    return Object.keys(currencyCount).reduce((a, b) => 
+    return Object.keys(currencyCount).reduce((a, b) =>
       currencyCount[a] > currencyCount[b] ? a : b
     );
   };
@@ -264,7 +278,7 @@ const Invoices: React.FC = () => {
   const handleDownloadPDF = async (invoiceId: number, invoiceNumber: string) => {
     try {
       console.log('🔍 Downloading PDF for invoice:', invoiceId);
-      
+
       // Use the base api instance instead of invoicesAPI
       const response = await api.get(`/invoices/${invoiceId}/pdf`, {
         responseType: 'blob', // Important for binary data
@@ -272,21 +286,21 @@ const Invoices: React.FC = () => {
 
       // Create blob from response data
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `invoice-${invoiceNumber}.pdf`;
-      
+
       // Trigger download
       document.body.appendChild(link);
       link.click();
-      
+
       // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       console.log('✅ PDF downloaded successfully');
     } catch (error: any) {
       console.error('❌ Error downloading PDF:', error);
@@ -297,9 +311,9 @@ const Invoices: React.FC = () => {
   const handleSendReminder = async (invoiceId: number, invoiceNumber: string) => {
     try {
       console.log('📧 Sending payment reminder for invoice:', invoiceId);
-      
+
       const response = await api.post(`/invoices/${invoiceId}/remind`);
-      
+
       if (response.data) {
         setSuccess(`Payment reminder sent successfully for invoice ${invoiceNumber}`);
         console.log('✅ Payment reminder sent:', response.data);
@@ -329,14 +343,14 @@ const Invoices: React.FC = () => {
 
       if (response) {
         setSuccess(`Invoice status updated from ${response.previousStatus} to ${newStatus}`);
-        
+
         // Update the invoice in the local state
-        setInvoices(prev => prev.map(inv => 
-          inv.id === invoiceToChangeStatus.id 
-            ? { ...inv, status: newStatus as any }
-            : inv
-        ));
-        
+        setInvoices(prev =>
+          prev.map(inv =>
+            inv.id === invoiceToChangeStatus.id ? { ...inv, status: newStatus as any } : inv
+          )
+        );
+
         setStatusChangeDialogOpen(false);
         setInvoiceToChangeStatus(null);
       }
@@ -356,13 +370,11 @@ const Invoices: React.FC = () => {
 
       if (response) {
         setSuccess(`Invoice status updated to ${targetStatus}`);
-        
+
         // Update the invoice in the local state
-        setInvoices(prev => prev.map(inv => 
-          inv.id === invoice.id 
-            ? { ...inv, status: targetStatus as any }
-            : inv
-        ));
+        setInvoices(prev =>
+          prev.map(inv => (inv.id === invoice.id ? { ...inv, status: targetStatus as any } : inv))
+        );
       }
     } catch (error: any) {
       console.error('❌ Error updating status:', error);
@@ -393,11 +405,7 @@ const Invoices: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Invoices</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-        >
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()}>
           Create Invoice
         </Button>
       </Box>
@@ -437,12 +445,12 @@ const Invoices: React.FC = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              invoices.map((invoice) => (
+              invoices.map(invoice => (
                 <TableRow key={invoice.id} hover>
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <ReceiptIcon fontSize="small" color="action" />
-                      #{invoice.invoiceNumber || invoice.id}
+                      <ReceiptIcon fontSize="small" color="action" />#
+                      {invoice.invoiceNumber || invoice.id}
                     </Box>
                   </TableCell>
                   <TableCell>
@@ -454,11 +462,11 @@ const Invoices: React.FC = () => {
                   <TableCell>{formatDate(invoice.issueDate)}</TableCell>
                   <TableCell>{formatDate(invoice.dueDate)}</TableCell>
                   <TableCell>
-                    <Chip 
-                      label={invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)} 
+                    <Chip
+                      label={invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                       color={getStatusColor(invoice.status) as any}
-                      variant="outlined" 
-                      size="small" 
+                      variant="outlined"
+                      size="small"
                     />
                   </TableCell>
                   <TableCell>
@@ -568,25 +576,23 @@ const Invoices: React.FC = () => {
       {/* Create/Edit Invoice Dialog */}
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogTitle>
-            {editingInvoice ? 'Edit Invoice' : 'Create New Invoice'}
-          </DialogTitle>
+          <DialogTitle>{editingInvoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                 <Controller
                   name="clientId"
                   control={control}
-                  rules={{ required: 'Client is required', min: { value: 1, message: 'Please select a client' } }}
+                  rules={{
+                    required: 'Client is required',
+                    min: { value: 1, message: 'Please select a client' },
+                  }}
                   render={({ field }) => (
                     <FormControl fullWidth error={!!errors.clientId}>
                       <InputLabel>Client</InputLabel>
-                      <Select
-                        {...field}
-                        label="Client"
-                      >
+                      <Select {...field} label="Client">
                         <MenuItem value={0}>Select a client</MenuItem>
-                        {clients.map((client) => (
+                        {clients.map(client => (
                           <MenuItem key={client.id} value={client.id}>
                             {client.clientName}
                           </MenuItem>
@@ -602,11 +608,7 @@ const Invoices: React.FC = () => {
                 />
 
                 {selectedClientId > 0 && (
-                  <Button
-                    variant="outlined"
-                    onClick={generateFromTimeEntries}
-                    size="small"
-                  >
+                  <Button variant="outlined" onClick={generateFromTimeEntries} size="small">
                     Generate from Time Entries
                   </Button>
                 )}
@@ -649,11 +651,18 @@ const Invoices: React.FC = () => {
               </Box>
 
               <Typography variant="h6">Invoice Items</Typography>
-              
+
               {fields.map((field, index) => (
                 <Card key={field.id} variant="outlined">
                   <CardContent>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 2, alignItems: 'start' }}>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '2fr 1fr 1fr auto',
+                        gap: 2,
+                        alignItems: 'start',
+                      }}
+                    >
                       <Controller
                         name={`items.${index}.description`}
                         control={control}
@@ -672,7 +681,10 @@ const Invoices: React.FC = () => {
                       <Controller
                         name={`items.${index}.quantity`}
                         control={control}
-                        rules={{ required: 'Quantity is required', min: { value: 0.01, message: 'Must be greater than 0' } }}
+                        rules={{
+                          required: 'Quantity is required',
+                          min: { value: 0.01, message: 'Must be greater than 0' },
+                        }}
                         render={({ field }) => (
                           <TextField
                             {...field}
@@ -689,7 +701,10 @@ const Invoices: React.FC = () => {
                       <Controller
                         name={`items.${index}.unitPrice`}
                         control={control}
-                        rules={{ required: 'Unit price is required', min: { value: 0.01, message: 'Must be greater than 0' } }}
+                        rules={{
+                          required: 'Unit price is required',
+                          min: { value: 0.01, message: 'Must be greater than 0' },
+                        }}
                         render={({ field }) => (
                           <TextField
                             {...field}
@@ -741,22 +756,21 @@ const Invoices: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button 
-              type="submit" 
-              variant="contained"
-              disabled={submitting}
-            >
-              {submitting ? <CircularProgress size={20} /> : (editingInvoice ? 'Update' : 'Create')}
+            <Button type="submit" variant="contained" disabled={submitting}>
+              {submitting ? <CircularProgress size={20} /> : editingInvoice ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
       {/* View Invoice Dialog */}
-      <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          Invoice #{selectedInvoice?.invoiceNumber || selectedInvoice?.id}
-        </DialogTitle>
+      <Dialog
+        open={viewDialogOpen}
+        onClose={() => setViewDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Invoice #{selectedInvoice?.invoiceNumber || selectedInvoice?.id}</DialogTitle>
         <DialogContent>
           {selectedInvoice && (
             <Box>
@@ -767,11 +781,14 @@ const Invoices: React.FC = () => {
                 </Box>
                 <Box>
                   <Typography variant="subtitle2">Status:</Typography>
-                  <Chip 
-                    label={selectedInvoice.status.charAt(0).toUpperCase() + selectedInvoice.status.slice(1)} 
+                  <Chip
+                    label={
+                      selectedInvoice.status.charAt(0).toUpperCase() +
+                      selectedInvoice.status.slice(1)
+                    }
                     color={getStatusColor(selectedInvoice.status) as any}
-                    variant="outlined" 
-                    size="small" 
+                    variant="outlined"
+                    size="small"
                   />
                 </Box>
                 <Box>
@@ -786,7 +803,9 @@ const Invoices: React.FC = () => {
 
               <Divider sx={{ my: 2 }} />
 
-              <Typography variant="h6" gutterBottom>Items</Typography>
+              <Typography variant="h6" gutterBottom>
+                Items
+              </Typography>
               <TableContainer>
                 <Table size="small">
                   <TableHead>
@@ -802,8 +821,18 @@ const Invoices: React.FC = () => {
                       <TableRow key={index}>
                         <TableCell>{item.description}</TableCell>
                         <TableCell align="right">{item.quantity}</TableCell>
-                        <TableCell align="right">{formatCurrency(parseFloat(item.unitPrice), getClientCurrency(selectedInvoice.clientId))}</TableCell>
-                        <TableCell align="right">{formatCurrency(parseFloat(item.quantity) * parseFloat(item.unitPrice), getClientCurrency(selectedInvoice.clientId))}</TableCell>
+                        <TableCell align="right">
+                          {formatCurrency(
+                            parseFloat(item.unitPrice),
+                            getClientCurrency(selectedInvoice.clientId)
+                          )}
+                        </TableCell>
+                        <TableCell align="right">
+                          {formatCurrency(
+                            parseFloat(item.quantity) * parseFloat(item.unitPrice),
+                            getClientCurrency(selectedInvoice.clientId)
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -812,7 +841,11 @@ const Invoices: React.FC = () => {
 
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                 <Typography variant="h6">
-                  Total: {formatCurrency(selectedInvoice.totalAmount, getClientCurrency(selectedInvoice.clientId))}
+                  Total:{' '}
+                  {formatCurrency(
+                    selectedInvoice.totalAmount,
+                    getClientCurrency(selectedInvoice.clientId)
+                  )}
                 </Typography>
               </Box>
 
@@ -832,7 +865,12 @@ const Invoices: React.FC = () => {
       </Dialog>
 
       {/* Status Change Dialog */}
-      <Dialog open={statusChangeDialogOpen} onClose={() => setStatusChangeDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={statusChangeDialogOpen}
+        onClose={() => setStatusChangeDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           Change Invoice Status
           {invoiceToChangeStatus && (
@@ -847,7 +885,7 @@ const Invoices: React.FC = () => {
               <InputLabel>New Status</InputLabel>
               <Select
                 value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
+                onChange={e => setNewStatus(e.target.value)}
                 label="New Status"
               >
                 <MenuItem value="draft">
@@ -872,14 +910,14 @@ const Invoices: React.FC = () => {
                 </MenuItem>
               </Select>
             </FormControl>
-            
+
             <TextField
               fullWidth
               label="Reason (Optional)"
               multiline
               rows={3}
               value={statusChangeReason}
-              onChange={(e) => setStatusChangeReason(e.target.value)}
+              onChange={e => setStatusChangeReason(e.target.value)}
               placeholder="Enter reason for status change..."
               helperText="This will be added to the invoice notes"
             />
@@ -887,7 +925,7 @@ const Invoices: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setStatusChangeDialogOpen(false)}>Cancel</Button>
-          <Button 
+          <Button
             onClick={handleStatusChangeSubmit}
             variant="contained"
             disabled={!newStatus || newStatus === invoiceToChangeStatus?.status}

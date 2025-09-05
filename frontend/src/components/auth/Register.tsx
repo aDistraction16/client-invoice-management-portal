@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Container,
-  Link,
-} from '@mui/material';
+import { Box, Paper, TextField, Button, Typography, Alert, Container, Link } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -51,11 +42,30 @@ const Register: React.FC = () => {
         }}
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            Invoice Portal
+          <Typography 
+            component="h1" 
+            variant="h4" 
+            align="center" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 'bold',
+              color: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1
+            }}
+          >
+            💼 InvoiceFlow Pro
           </Typography>
-          <Typography component="h2" variant="h5" align="center" gutterBottom>
-            Sign Up
+          <Typography 
+            component="h2" 
+            variant="h5" 
+            align="center" 
+            gutterBottom
+            sx={{ color: 'text.secondary', fontWeight: 'normal' }}
+          >
+            Join Us Today
           </Typography>
 
           {showError && error && (
@@ -131,8 +141,7 @@ const Register: React.FC = () => {
               autoComplete="new-password"
               {...register('confirmPassword', {
                 required: 'Please confirm your password',
-                validate: (value) =>
-                  value === password || 'Passwords do not match',
+                validate: value => value === password || 'Passwords do not match',
               })}
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword?.message}

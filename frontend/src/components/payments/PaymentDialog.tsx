@@ -15,7 +15,7 @@ import {
   Box,
   Card,
   CardContent,
-  Divider
+  Divider,
 } from '@mui/material';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -51,8 +51,8 @@ const PaymentForm: React.FC<{
       } catch (error) {
         // Fallback currencies if fetch fails
         setSupportedCurrencies({
-          'usd': 'US Dollar',
-          'php': 'Philippine Peso'
+          usd: 'US Dollar',
+          php: 'Philippine Peso',
         });
       }
     };
@@ -78,7 +78,7 @@ const PaymentForm: React.FC<{
       // Create payment intent
       const paymentIntentResponse = await api.post('/payments/create-payment-intent', {
         invoiceId: invoice.id,
-        currency: currency
+        currency: currency,
       });
 
       const { client_secret } = paymentIntentResponse.data.data.paymentIntent;
@@ -90,7 +90,7 @@ const PaymentForm: React.FC<{
           billing_details: {
             name: 'Customer Name', // You might want to get this from the invoice/client data
           },
-        }
+        },
       });
 
       if (result.error) {
@@ -119,7 +119,7 @@ const PaymentForm: React.FC<{
         <Typography variant="h6" gutterBottom>
           Payment Details
         </Typography>
-        
+
         <Card variant="outlined" sx={{ mb: 2 }}>
           <CardContent>
             <Typography variant="subtitle1" color="primary" gutterBottom>
@@ -136,11 +136,7 @@ const PaymentForm: React.FC<{
 
         <FormControl fullWidth sx={{ mb: 2 }}>
           <InputLabel>Currency</InputLabel>
-          <Select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            label="Currency"
-          >
+          <Select value={currency} onChange={e => setCurrency(e.target.value)} label="Currency">
             {Object.entries(supportedCurrencies).map(([code, name]) => (
               <MenuItem key={code} value={code}>
                 {code.toUpperCase()} - {name}
@@ -152,23 +148,25 @@ const PaymentForm: React.FC<{
         <Typography variant="subtitle2" gutterBottom>
           Card Information
         </Typography>
-        
-        <Box sx={{ 
-          p: 2, 
-          border: 1, 
-          borderColor: 'divider', 
-          borderRadius: 1,
-          '& .StripeElement': {
-            height: '40px',
-            padding: '10px 12px',
-            color: '#424770',
-            backgroundColor: 'white',
-            fontSize: '16px',
-            '::placeholder': {
-              color: '#aab7c4'
-            }
-          }
-        }}>
+
+        <Box
+          sx={{
+            p: 2,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1,
+            '& .StripeElement': {
+              height: '40px',
+              padding: '10px 12px',
+              color: '#424770',
+              backgroundColor: 'white',
+              fontSize: '16px',
+              '::placeholder': {
+                color: '#aab7c4',
+              },
+            },
+          }}
+        >
           <CardElement
             options={{
               style: {
@@ -191,7 +189,7 @@ const PaymentForm: React.FC<{
         <Typography variant="body2" color="text.secondary">
           🔒 Payments are secure and encrypted
         </Typography>
-        
+
         <Button
           type="submit"
           variant="contained"
@@ -199,18 +197,20 @@ const PaymentForm: React.FC<{
           disabled={!stripe || processing}
           startIcon={processing ? <CircularProgress size={20} /> : null}
         >
-          {processing ? 'Processing...' : `Pay ${formatAmount(invoice?.totalAmount || '0', currency)}`}
+          {processing
+            ? 'Processing...'
+            : `Pay ${formatAmount(invoice?.totalAmount || '0', currency)}`}
         </Button>
       </Box>
     </form>
   );
 };
 
-const PaymentDialog: React.FC<PaymentDialogProps> = ({ 
-  open, 
-  onClose, 
-  invoice, 
-  onPaymentSuccess 
+const PaymentDialog: React.FC<PaymentDialogProps> = ({
+  open,
+  onClose,
+  invoice,
+  onPaymentSuccess,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -237,28 +237,26 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: { minHeight: '500px' }
+        sx: { minHeight: '500px' },
       }}
     >
       <DialogTitle>
-        <Typography variant="h5">
-          💳 Secure Payment
-        </Typography>
+        <Typography variant="h5">💳 Secure Payment</Typography>
       </DialogTitle>
-      
+
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        
+
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
             Payment successful! Thank you for your payment.
@@ -267,20 +265,14 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
         {!success && (
           <Elements stripe={stripePromise}>
-            <PaymentForm
-              invoice={invoice}
-              onSuccess={handleSuccess}
-              onError={handleError}
-            />
+            <PaymentForm invoice={invoice} onSuccess={handleSuccess} onError={handleError} />
           </Elements>
         )}
       </DialogContent>
-      
+
       {!success && (
         <DialogActions>
-          <Button onClick={handleClose}>
-            Cancel
-          </Button>
+          <Button onClick={handleClose}>Cancel</Button>
         </DialogActions>
       )}
     </Dialog>

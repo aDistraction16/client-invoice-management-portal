@@ -16,7 +16,7 @@ import {
   ProjectsResponse,
   TimeEntriesResponse,
   InvoicesResponse,
-  TimeEntryFilters
+  TimeEntryFilters,
 } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -25,6 +25,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Important for session cookies
+  timeout: 10000, // 10 second timeout to prevent hanging requests
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,43 +33,61 @@ const api = axios.create({
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
+  config => {
+    // Log API calls for debugging
+    console.log(`🚀 API ${config.method?.toUpperCase()}: ${config.url}`);
     return config;
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => {
+  response => {
     return response;
   },
-  (error) => {
-    // Handle authentication errors
+  error => {
+    // Handle rate limiting (429) - don't treat as auth failure
+    if (error.response?.status === 429) {
+      console.warn('🚦 Rate limited - backing off requests');
+      error.message = 'Too many requests - please wait a moment before trying again';
+      return Promise.reject(error);
+    }
+
+    // Handle authentication errors (401)
     if (error.response?.status === 401) {
       console.warn('🔐 Authentication required - redirecting to login');
-      
+
       // Clear any stored auth state
       localStorage.removeItem('user');
-      
+
       // Only redirect if not already on login page
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
     }
-    
-    // Handle network errors
+
+    // Handle network errors more carefully
     if (!error.response) {
       console.error('🌐 Network Error - Check if backend is running');
-      
-      // Don't redirect on network errors, just show error
-      if (error.code === 'ERR_NETWORK') {
+
+      // Handle CORS errors specifically
+      if (error.message.includes('CORS policy') || error.message.includes('Access-Control-Allow-Origin')) {
+        console.error('🚫 CORS Error - Backend CORS configuration issue');
+        error.message = 'CORS Error: Backend server needs to allow requests from this domain';
+      }
+      // Only show network error for actual connection failures
+      else if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
         error.message = 'Network Error: Please check if the server is running';
+      } else if (error.code === 'ECONNABORTED') {
+        error.message = 'Request timeout - please try again';
+      } else {
+        error.message = error.message || 'An unexpected error occurred';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -93,12 +112,13 @@ export const authAPI = {
   getCurrentUser: async (): Promise<{ user: User }> => {
     try {
       // Use session check endpoint for better reliability
-      const response: AxiosResponse<{ authenticated: boolean; user: User }> = await api.get('/session-check');
-      
+      const response: AxiosResponse<{ authenticated: boolean; user: User }> =
+        await api.get('/session-check');
+
       if (!response.data.authenticated || !response.data.user) {
         throw new Error('Not authenticated');
       }
-      
+
       return { user: response.data.user };
     } catch (error) {
       // Fallback to legacy endpoint if session-check fails
@@ -122,12 +142,21 @@ export const clientsAPI = {
   },
 
   create: async (data: ClientFormData): Promise<{ client: Client; message: string }> => {
-    const response: AxiosResponse<{ client: Client; message: string }> = await api.post('/clients', data);
+    const response: AxiosResponse<{ client: Client; message: string }> = await api.post(
+      '/clients',
+      data
+    );
     return response.data;
   },
 
-  update: async (id: number, data: Partial<ClientFormData>): Promise<{ client: Client; message: string }> => {
-    const response: AxiosResponse<{ client: Client; message: string }> = await api.put(`/clients/${id}`, data);
+  update: async (
+    id: number,
+    data: Partial<ClientFormData>
+  ): Promise<{ client: Client; message: string }> => {
+    const response: AxiosResponse<{ client: Client; message: string }> = await api.put(
+      `/clients/${id}`,
+      data
+    );
     return response.data;
   },
 
@@ -155,12 +184,21 @@ export const projectsAPI = {
   },
 
   create: async (data: ProjectFormData): Promise<{ project: Project; message: string }> => {
-    const response: AxiosResponse<{ project: Project; message: string }> = await api.post('/projects', data);
+    const response: AxiosResponse<{ project: Project; message: string }> = await api.post(
+      '/projects',
+      data
+    );
     return response.data;
   },
 
-  update: async (id: number, data: Partial<ProjectFormData>): Promise<{ project: Project; message: string }> => {
-    const response: AxiosResponse<{ project: Project; message: string }> = await api.put(`/projects/${id}`, data);
+  update: async (
+    id: number,
+    data: Partial<ProjectFormData>
+  ): Promise<{ project: Project; message: string }> => {
+    const response: AxiosResponse<{ project: Project; message: string }> = await api.put(
+      `/projects/${id}`,
+      data
+    );
     return response.data;
   },
 
@@ -179,8 +217,10 @@ export const timeEntriesAPI = {
     if (filters?.endDate) params.append('endDate', filters.endDate);
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
-    
-    const response: AxiosResponse<TimeEntriesResponse> = await api.get(`/time-entries?${params.toString()}`);
+
+    const response: AxiosResponse<TimeEntriesResponse> = await api.get(
+      `/time-entries?${params.toString()}`
+    );
     return response.data;
   },
 
@@ -190,17 +230,28 @@ export const timeEntriesAPI = {
   },
 
   getByProjectId: async (projectId: number): Promise<TimeEntriesResponse> => {
-    const response: AxiosResponse<TimeEntriesResponse> = await api.get(`/time-entries/project/${projectId}`);
+    const response: AxiosResponse<TimeEntriesResponse> = await api.get(
+      `/time-entries/project/${projectId}`
+    );
     return response.data;
   },
 
   create: async (data: TimeEntryFormData): Promise<{ timeEntry: TimeEntry; message: string }> => {
-    const response: AxiosResponse<{ timeEntry: TimeEntry; message: string }> = await api.post('/time-entries', data);
+    const response: AxiosResponse<{ timeEntry: TimeEntry; message: string }> = await api.post(
+      '/time-entries',
+      data
+    );
     return response.data;
   },
 
-  update: async (id: number, data: Partial<TimeEntryFormData>): Promise<{ timeEntry: TimeEntry; message: string }> => {
-    const response: AxiosResponse<{ timeEntry: TimeEntry; message: string }> = await api.put(`/time-entries/${id}`, data);
+  update: async (
+    id: number,
+    data: Partial<TimeEntryFormData>
+  ): Promise<{ timeEntry: TimeEntry; message: string }> => {
+    const response: AxiosResponse<{ timeEntry: TimeEntry; message: string }> = await api.put(
+      `/time-entries/${id}`,
+      data
+    );
     return response.data;
   },
 
@@ -223,12 +274,21 @@ export const invoicesAPI = {
   },
 
   create: async (data: InvoiceFormData): Promise<{ invoice: Invoice; message: string }> => {
-    const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.post('/invoices', data);
+    const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.post(
+      '/invoices',
+      data
+    );
     return response.data;
   },
 
-  update: async (id: number, data: Partial<Pick<Invoice, 'issueDate' | 'dueDate' | 'status' | 'notes'>>): Promise<{ invoice: Invoice; message: string }> => {
-    const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.put(`/invoices/${id}`, data);
+  update: async (
+    id: number,
+    data: Partial<Pick<Invoice, 'issueDate' | 'dueDate' | 'status' | 'notes'>>
+  ): Promise<{ invoice: Invoice; message: string }> => {
+    const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.put(
+      `/invoices/${id}`,
+      data
+    );
     return response.data;
   },
 
@@ -238,22 +298,34 @@ export const invoicesAPI = {
   },
 
   markAsSent: async (id: number): Promise<{ invoice: Invoice; message: string }> => {
-    const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.patch(`/invoices/${id}/send`);
+    const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.patch(
+      `/invoices/${id}/send`
+    );
     return response.data;
   },
 
   markAsPaid: async (id: number): Promise<{ invoice: Invoice; message: string }> => {
-    const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.patch(`/invoices/${id}/pay`);
+    const response: AxiosResponse<{ invoice: Invoice; message: string }> = await api.patch(
+      `/invoices/${id}/pay`
+    );
     return response.data;
   },
 
-  updateStatus: async (id: number, status: string, reason?: string): Promise<{ invoice: Invoice; message: string; previousStatus: string }> => {
-    const response: AxiosResponse<{ invoice: Invoice; message: string; previousStatus: string }> = await api.patch(`/invoices/${id}/status`, { status, reason });
+  updateStatus: async (
+    id: number,
+    status: string,
+    reason?: string
+  ): Promise<{ invoice: Invoice; message: string; previousStatus: string }> => {
+    const response: AxiosResponse<{ invoice: Invoice; message: string; previousStatus: string }> =
+      await api.patch(`/invoices/${id}/status`, { status, reason });
     return response.data;
   },
 
-  sendReminder: async (id: number): Promise<{ message: string; daysPastDue: number; reminderType: string }> => {
-    const response: AxiosResponse<{ message: string; daysPastDue: number; reminderType: string }> = await api.post(`/invoices/${id}/remind`);
+  sendReminder: async (
+    id: number
+  ): Promise<{ message: string; daysPastDue: number; reminderType: string }> => {
+    const response: AxiosResponse<{ message: string; daysPastDue: number; reminderType: string }> =
+      await api.post(`/invoices/${id}/remind`);
     return response.data;
   },
 };

@@ -1,21 +1,12 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Container,
-  Link,
-} from '@mui/material';
+import { Box, Paper, TextField, Button, Typography, Alert, Container, Link } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoginFormData } from '../../types';
 
 const Login: React.FC = () => {
-  const { login, error, isLoading, clearError } = useAuth();
+  const { login, error, isLoading, clearError, emergencyReset } = useAuth();
   const navigate = useNavigate();
   const [showError, setShowError] = useState(false);
 
@@ -47,11 +38,30 @@ const Login: React.FC = () => {
         }}
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            Invoice Portal
+          <Typography 
+            component="h1" 
+            variant="h4" 
+            align="center" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 'bold',
+              color: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1
+            }}
+          >
+            💼 InvoiceFlow Pro
           </Typography>
-          <Typography component="h2" variant="h5" align="center" gutterBottom>
-            Sign In
+          <Typography 
+            component="h2" 
+            variant="h5" 
+            align="center" 
+            gutterBottom
+            sx={{ color: 'text.secondary', fontWeight: 'normal' }}
+          >
+            Welcome Back
           </Typography>
 
           {showError && error && (
@@ -111,6 +121,21 @@ const Login: React.FC = () => {
                 Don't have an account? Sign Up
               </Link>
             </Box>
+            
+            {/* Emergency Reset Button - Only show in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  size="small"
+                  onClick={emergencyReset}
+                  sx={{ fontSize: '0.75rem' }}
+                >
+                  🚨 Emergency Reset (Dev Only)
+                </Button>
+              </Box>
+            )}
           </Box>
         </Paper>
       </Box>

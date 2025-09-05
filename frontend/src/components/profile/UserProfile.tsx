@@ -37,7 +37,11 @@ const UserProfile: React.FC = () => {
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
-  const { control: profileControl, handleSubmit: handleProfileSubmit, formState: { errors: profileErrors } } = useForm<ProfileFormData>({
+  const {
+    control: profileControl,
+    handleSubmit: handleProfileSubmit,
+    formState: { errors: profileErrors },
+  } = useForm<ProfileFormData>({
     defaultValues: {
       email: user?.email || '',
       companyName: user?.companyName || '',
@@ -45,7 +49,12 @@ const UserProfile: React.FC = () => {
     },
   });
 
-  const { control: passwordControl, handleSubmit: handlePasswordSubmit, reset: resetPassword, formState: { errors: passwordErrors } } = useForm<PasswordFormData>({
+  const {
+    control: passwordControl,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPassword,
+    formState: { errors: passwordErrors },
+  } = useForm<PasswordFormData>({
     defaultValues: {
       currentPassword: '',
       newPassword: '',
@@ -58,7 +67,7 @@ const UserProfile: React.FC = () => {
       setProfileSubmitting(true);
       setError(null);
       setSuccess(null);
-      
+
       // Note: This would need a profile update endpoint in the backend
       // For now, we'll show a success message
       setSuccess('Profile updated successfully! (Note: Backend endpoint needed)');
@@ -116,18 +125,18 @@ const UserProfile: React.FC = () => {
               <PersonIcon color="primary" />
               <Typography variant="h6">Profile Information</Typography>
             </Box>
-            
+
             <form onSubmit={handleProfileSubmit(onProfileSubmit)}>
               <Box sx={{ display: 'grid', gap: 2, maxWidth: 400 }}>
                 <Controller
                   name="email"
                   control={profileControl}
-                  rules={{ 
+                  rules={{
                     required: 'Email is required',
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address'
-                    }
+                      message: 'Invalid email address',
+                    },
                   }}
                   render={({ field }) => (
                     <TextField
@@ -190,7 +199,7 @@ const UserProfile: React.FC = () => {
               <SecurityIcon color="primary" />
               <Typography variant="h6">Change Password</Typography>
             </Box>
-            
+
             <form onSubmit={handlePasswordSubmit(onPasswordSubmit)}>
               <Box sx={{ display: 'grid', gap: 2, maxWidth: 400 }}>
                 <Controller
@@ -212,12 +221,12 @@ const UserProfile: React.FC = () => {
                 <Controller
                   name="newPassword"
                   control={passwordControl}
-                  rules={{ 
+                  rules={{
                     required: 'New password is required',
                     minLength: {
                       value: 8,
-                      message: 'Password must be at least 8 characters'
-                    }
+                      message: 'Password must be at least 8 characters',
+                    },
                   }}
                   render={({ field }) => (
                     <TextField
@@ -269,7 +278,7 @@ const UserProfile: React.FC = () => {
               <BusinessIcon color="primary" />
               <Typography variant="h6">Account Information</Typography>
             </Box>
-            
+
             <Box sx={{ display: 'grid', gap: 1 }}>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -277,19 +286,23 @@ const UserProfile: React.FC = () => {
                 </Typography>
                 <Typography>{user?.id}</Typography>
               </Box>
-              
+
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">
                   Account Created:
                 </Typography>
-                <Typography>{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</Typography>
+                <Typography>
+                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                </Typography>
               </Box>
-              
+
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">
                   Last Updated:
                 </Typography>
-                <Typography>{user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}</Typography>
+                <Typography>
+                  {user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}
+                </Typography>
               </Box>
             </Box>
           </CardContent>

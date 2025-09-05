@@ -15,7 +15,7 @@ import {
   Box,
   Link,
   Card,
-  CardContent
+  CardContent,
 } from '@mui/material';
 import { Payment, Launch, ContentCopy } from '@mui/icons-material';
 import api from '../../services/api';
@@ -27,11 +27,11 @@ interface PaymentLinkDialogProps {
   onSuccess?: () => void;
 }
 
-const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({ 
-  open, 
-  onClose, 
-  invoice, 
-  onSuccess 
+const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
+  open,
+  onClose,
+  invoice,
+  onSuccess,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,10 +40,10 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const [initialInvoice, setInitialInvoice] = useState(invoice); // Capture initial invoice
   const [supportedCurrencies] = useState({
-    'usd': 'US Dollar',
-    'php': 'Philippine Peso',
-    'eur': 'Euro',
-    'gbp': 'British Pound'
+    usd: 'US Dollar',
+    php: 'Philippine Peso',
+    eur: 'Euro',
+    gbp: 'British Pound',
   });
 
   // Set initial invoice when dialog opens and don't change it during re-renders
@@ -70,9 +70,9 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
     try {
       const response = await api.post('/payments/create-payment-link', {
         invoiceId: invoice.id,
-        currency: currency
+        currency: currency,
       });
-      
+
       // Handle different possible response structures
       let linkUrl = null;
       if (response.data.data?.paymentLink?.url) {
@@ -125,16 +125,9 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle>
-        💳 Create Payment Link
-      </DialogTitle>
-      
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle>💳 Create Payment Link</DialogTitle>
+
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -160,11 +153,7 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
           <>
             <FormControl fullWidth sx={{ mb: 3 }}>
               <InputLabel>Currency</InputLabel>
-              <Select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                label="Currency"
-              >
+              <Select value={currency} onChange={e => setCurrency(e.target.value)} label="Currency">
                 {Object.entries(supportedCurrencies).map(([code, name]) => (
                   <MenuItem key={code} value={code}>
                     {code.toUpperCase()} - {name}
@@ -174,8 +163,8 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
             </FormControl>
 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              This will create a secure payment link that you can share with your client. 
-              The link will redirect to a Stripe-hosted payment page.
+              This will create a secure payment link that you can share with your client. The link
+              will redirect to a Stripe-hosted payment page.
             </Typography>
           </>
         ) : (
@@ -183,18 +172,18 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
             <Alert severity="success" sx={{ mb: 2 }}>
               Payment link created successfully!
             </Alert>
-            
+
             <Typography variant="subtitle2" gutterBottom>
               Payment Link:
             </Typography>
-            
+
             <Card variant="outlined" sx={{ mb: 2, p: 2, bgcolor: 'grey.50' }}>
-              <Typography 
-                variant="body2" 
-                sx={{ 
+              <Typography
+                variant="body2"
+                sx={{
                   wordBreak: 'break-all',
                   fontFamily: 'monospace',
-                  fontSize: '0.875rem'
+                  fontSize: '0.875rem',
                 }}
               >
                 {paymentLink}
@@ -207,11 +196,11 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
                 startIcon={<ContentCopy />}
                 onClick={handleCopyLink}
                 size="small"
-                color={copySuccess ? "success" : "primary"}
+                color={copySuccess ? 'success' : 'primary'}
               >
                 {copySuccess ? 'Copied!' : 'Copy Link'}
               </Button>
-              
+
               <Button
                 variant="contained"
                 startIcon={<Launch />}
@@ -227,12 +216,10 @@ const PaymentLinkDialog: React.FC<PaymentLinkDialogProps> = ({
           </Box>
         )}
       </DialogContent>
-      
+
       <DialogActions>
-        <Button onClick={handleClose}>
-          {paymentLink ? 'Close' : 'Cancel'}
-        </Button>
-        
+        <Button onClick={handleClose}>{paymentLink ? 'Close' : 'Cancel'}</Button>
+
         {!paymentLink && (
           <Button
             variant="contained"

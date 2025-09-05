@@ -59,7 +59,12 @@ const Projects: React.FC = () => {
     }
   };
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<ProjectFormData>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProjectFormData>({
     defaultValues: {
       clientId: 0,
       projectName: '',
@@ -75,7 +80,7 @@ const Projects: React.FC = () => {
       setLoading(true);
       const [projectsRes, clientsRes] = await Promise.all([
         projectsAPI.getAll(),
-        clientsAPI.getAll()
+        clientsAPI.getAll(),
       ]);
       setProjects(projectsRes.projects);
       setClients(clientsRes.clients);
@@ -181,11 +186,7 @@ const Projects: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Projects</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-        >
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()}>
           Add Project
         </Button>
       </Box>
@@ -218,15 +219,13 @@ const Projects: React.FC = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              projects.map((project) => (
+              projects.map(project => (
                 <TableRow key={project.id} hover>
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1}>
                       <WorkIcon color="action" />
                       <Box>
-                        <Typography variant="subtitle2">
-                          {project.projectName}
-                        </Typography>
+                        <Typography variant="subtitle2">{project.projectName}</Typography>
                         {project.description && (
                           <Typography variant="body2" color="text.secondary">
                             {project.description}
@@ -242,38 +241,34 @@ const Projects: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Chip 
-                      label={project.status.charAt(0).toUpperCase() + project.status.slice(1)} 
+                    <Chip
+                      label={project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                       color={getStatusColor(project.status) as any}
-                      variant="outlined" 
-                      size="small" 
+                      variant="outlined"
+                      size="small"
                     />
                   </TableCell>
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Typography component="span" sx={{ fontWeight: 'bold', color: 'action.active' }}>
+                      <Typography
+                        component="span"
+                        sx={{ fontWeight: 'bold', color: 'action.active' }}
+                      >
                         {getCurrencyIcon(project.currency || 'PHP')}
                       </Typography>
-                      {parseFloat(project.hourlyRate).toLocaleString('en-US', { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2 
-                      })}/hr
+                      {parseFloat(project.hourlyRate).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                      /hr
                     </Box>
                   </TableCell>
                   <TableCell>{formatDate(project.createdAt)}</TableCell>
                   <TableCell align="right">
-                    <IconButton
-                      onClick={() => handleOpen(project)}
-                      color="primary"
-                      size="small"
-                    >
+                    <IconButton onClick={() => handleOpen(project)} color="primary" size="small">
                       <EditIcon />
                     </IconButton>
-                    <IconButton
-                      onClick={() => handleDelete(project.id)}
-                      color="error"
-                      size="small"
-                    >
+                    <IconButton onClick={() => handleDelete(project.id)} color="error" size="small">
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
@@ -286,24 +281,22 @@ const Projects: React.FC = () => {
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogTitle>
-            {editingProject ? 'Edit Project' : 'Add New Project'}
-          </DialogTitle>
+          <DialogTitle>{editingProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Controller
                 name="clientId"
                 control={control}
-                rules={{ required: 'Client is required', min: { value: 1, message: 'Please select a client' } }}
+                rules={{
+                  required: 'Client is required',
+                  min: { value: 1, message: 'Please select a client' },
+                }}
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.clientId}>
                     <InputLabel>Client</InputLabel>
-                    <Select
-                      {...field}
-                      label="Client"
-                    >
+                    <Select {...field} label="Client">
                       <MenuItem value={0}>Select a client</MenuItem>
-                      {clients.map((client) => (
+                      {clients.map(client => (
                         <MenuItem key={client.id} value={client.id}>
                           {client.clientName}
                         </MenuItem>
@@ -317,7 +310,7 @@ const Projects: React.FC = () => {
                   </FormControl>
                 )}
               />
-              
+
               <Controller
                 name="projectName"
                 control={control}
@@ -332,7 +325,7 @@ const Projects: React.FC = () => {
                   />
                 )}
               />
-              
+
               <Controller
                 name="description"
                 control={control}
@@ -348,14 +341,14 @@ const Projects: React.FC = () => {
                   />
                 )}
               />
-              
+
               <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 2 }}>
                 <Controller
                   name="hourlyRate"
                   control={control}
-                  rules={{ 
+                  rules={{
                     required: 'Hourly rate is required',
-                    min: { value: 0.01, message: 'Hourly rate must be greater than 0' }
+                    min: { value: 0.01, message: 'Hourly rate must be greater than 0' },
                   }}
                   render={({ field }) => (
                     <TextField
@@ -369,7 +362,7 @@ const Projects: React.FC = () => {
                     />
                   )}
                 />
-                
+
                 <Controller
                   name="currency"
                   control={control}
@@ -377,10 +370,7 @@ const Projects: React.FC = () => {
                   render={({ field }) => (
                     <FormControl fullWidth error={!!errors.currency}>
                       <InputLabel>Currency</InputLabel>
-                      <Select
-                        {...field}
-                        label="Currency"
-                      >
+                      <Select {...field} label="Currency">
                         <MenuItem value="USD">USD ($)</MenuItem>
                         <MenuItem value="PHP">PHP (₱)</MenuItem>
                       </Select>
@@ -393,7 +383,7 @@ const Projects: React.FC = () => {
                   )}
                 />
               </Box>
-              
+
               <Controller
                 name="status"
                 control={control}
@@ -401,10 +391,7 @@ const Projects: React.FC = () => {
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.status}>
                     <InputLabel>Status</InputLabel>
-                    <Select
-                      {...field}
-                      label="Status"
-                    >
+                    <Select {...field} label="Status">
                       <MenuItem value="active">Active</MenuItem>
                       <MenuItem value="paused">Paused</MenuItem>
                       <MenuItem value="completed">Completed</MenuItem>
@@ -421,12 +408,8 @@ const Projects: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button 
-              type="submit" 
-              variant="contained"
-              disabled={submitting}
-            >
-              {submitting ? <CircularProgress size={20} /> : (editingProject ? 'Update' : 'Create')}
+            <Button type="submit" variant="contained" disabled={submitting}>
+              {submitting ? <CircularProgress size={20} /> : editingProject ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </form>

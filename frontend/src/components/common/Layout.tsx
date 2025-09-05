@@ -18,6 +18,7 @@ import {
   AccessTime,
   Receipt,
   ExitToApp,
+  Person,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -54,13 +55,23 @@ const Layout: React.FC = () => {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Invoice Portal
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              flexGrow: 1,
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}
+          >
+            💼 InvoiceFlow Pro
           </Typography>
 
           {/* Navigation Items */}
           <Box sx={{ display: 'flex', gap: 1, mr: 2 }}>
-            {navigationItems.map((item) => {
+            {navigationItems.map(item => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               return (
@@ -110,6 +121,10 @@ const Layout: React.FC = () => {
                 <Typography variant="body2" color="text.secondary">
                   {user?.email}
                 </Typography>
+              </MenuItem>
+              <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>
+                <Person sx={{ mr: 1 }} />
+                Profile
               </MenuItem>
               <MenuItem onClick={handleLogout}>
                 <ExitToApp sx={{ mr: 1 }} />

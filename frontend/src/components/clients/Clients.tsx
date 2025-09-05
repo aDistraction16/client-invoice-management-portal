@@ -40,7 +40,12 @@ const Clients: React.FC = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<ClientFormData>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ClientFormData>({
     defaultValues: {
       clientName: '',
       contactPerson: '',
@@ -135,11 +140,7 @@ const Clients: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Clients</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-        >
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()}>
           Add Client
         </Button>
       </Box>
@@ -173,12 +174,10 @@ const Clients: React.FC = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              clients.map((client) => (
+              clients.map(client => (
                 <TableRow key={client.id} hover>
                   <TableCell>
-                    <Typography variant="subtitle2">
-                      {client.clientName}
-                    </Typography>
+                    <Typography variant="subtitle2">{client.clientName}</Typography>
                     {client.address && (
                       <Typography variant="body2" color="text.secondary">
                         {client.address}
@@ -203,27 +202,14 @@ const Clients: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Chip 
-                      label="Active" 
-                      color="success" 
-                      variant="outlined" 
-                      size="small" 
-                    />
+                    <Chip label="Active" color="success" variant="outlined" size="small" />
                   </TableCell>
                   <TableCell>{formatDate(client.createdAt)}</TableCell>
                   <TableCell align="right">
-                    <IconButton
-                      onClick={() => handleOpen(client)}
-                      color="primary"
-                      size="small"
-                    >
+                    <IconButton onClick={() => handleOpen(client)} color="primary" size="small">
                       <EditIcon />
                     </IconButton>
-                    <IconButton
-                      onClick={() => handleDelete(client.id)}
-                      color="error"
-                      size="small"
-                    >
+                    <IconButton onClick={() => handleDelete(client.id)} color="error" size="small">
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
@@ -236,9 +222,7 @@ const Clients: React.FC = () => {
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogTitle>
-            {editingClient ? 'Edit Client' : 'Add New Client'}
-          </DialogTitle>
+          <DialogTitle>{editingClient ? 'Edit Client' : 'Add New Client'}</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Controller
@@ -255,7 +239,7 @@ const Clients: React.FC = () => {
                   />
                 )}
               />
-              
+
               <Controller
                 name="contactPerson"
                 control={control}
@@ -270,16 +254,16 @@ const Clients: React.FC = () => {
                   />
                 )}
               />
-              
+
               <Controller
                 name="email"
                 control={control}
-                rules={{ 
+                rules={{
                   required: 'Email is required',
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address'
-                  }
+                    message: 'Invalid email address',
+                  },
                 }}
                 render={({ field }) => (
                   <TextField
@@ -292,7 +276,7 @@ const Clients: React.FC = () => {
                   />
                 )}
               />
-              
+
               <Controller
                 name="phoneNumber"
                 control={control}
@@ -306,7 +290,7 @@ const Clients: React.FC = () => {
                   />
                 )}
               />
-              
+
               <Controller
                 name="address"
                 control={control}
@@ -326,12 +310,8 @@ const Clients: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button 
-              type="submit" 
-              variant="contained"
-              disabled={submitting}
-            >
-              {submitting ? <CircularProgress size={20} /> : (editingClient ? 'Update' : 'Create')}
+            <Button type="submit" variant="contained" disabled={submitting}>
+              {submitting ? <CircularProgress size={20} /> : editingClient ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </form>

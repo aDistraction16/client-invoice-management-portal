@@ -10,15 +10,15 @@ export const formatDate = (dateString: string): string => {
 
 export const formatCurrency = (amount: string | number, currency: string = 'USD'): string => {
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-  
+
   // Map currency codes to locale and formatting
   const currencyConfig = {
     USD: { locale: 'en-US', symbol: '$' },
-    PHP: { locale: 'en-PH', symbol: '₱' }
+    PHP: { locale: 'en-PH', symbol: '₱' },
   };
-  
+
   const config = currencyConfig[currency as keyof typeof currencyConfig] || currencyConfig.USD;
-  
+
   return new Intl.NumberFormat(config.locale, {
     style: 'currency',
     currency: currency,
@@ -33,7 +33,7 @@ export const formatHours = (hours: string | number): string => {
 export const formatTime = (hours: number): string => {
   const wholeHours = Math.floor(hours);
   const minutes = Math.round((hours - wholeHours) * 60);
-  
+
   if (wholeHours === 0) {
     return `${minutes}m`;
   } else if (minutes === 0) {
@@ -43,7 +43,9 @@ export const formatTime = (hours: number): string => {
   }
 };
 
-export const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
+export const getStatusColor = (
+  status: string
+): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
   switch (status.toLowerCase()) {
     case 'active':
       return 'success';
@@ -76,8 +78,10 @@ export const validatePhoneNumber = (phone: string): boolean => {
   return phoneRegex.test(phone.replace(/[\s\-()]/g, ''));
 };
 
-export const calculateInvoiceTotal = (items: Array<{ quantity: number; unitPrice: number }>): number => {
-  return items.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
+export const calculateInvoiceTotal = (
+  items: Array<{ quantity: number; unitPrice: number }>
+): number => {
+  return items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
 };
 
 export const debounce = <T extends (...args: any[]) => any>(

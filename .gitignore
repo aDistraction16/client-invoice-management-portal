@@ -49,6 +49,19 @@ Thumbs.db
 # Redis dump
 dump.rdb
 
+# Documentation summaries (internal use only)
+docs/*Summary.md
+docs/Phase*Summary*.md
+docs/Phase*-Setup-Guide.md
+docs/Phase*-Completion-Report.md
+
+# Keep only the main implementation guide
+!docs/Implementation-Guide.md
+
+# Private study materials
+COMPREHENSIVE_STUDY_GUIDE.md
+*STUDY_GUIDE*.md
+
 # ============================================
 # PORTFOLIO CLEANUP - SENSITIVE & DEV FILES
 # ============================================

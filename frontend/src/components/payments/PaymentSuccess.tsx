@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, CircularProgress, Alert } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import api from '../../services/api';
 
@@ -30,7 +22,7 @@ const PaymentSuccess: React.FC = () => {
 
   useEffect(() => {
     let pollInterval: NodeJS.Timeout | null = null;
-    
+
     const fetchInvoiceStatus = async () => {
       if (!invoiceId) {
         setError('Invoice ID not found');
@@ -43,7 +35,7 @@ const PaymentSuccess: React.FC = () => {
         const response = await api.get(`/invoices/${invoiceId}`);
         const invoiceData = response.data.invoice;
         setInvoice(invoiceData);
-        
+
         // If still not paid, continue polling
         if (invoiceData.status !== 'paid') {
           // Invoice not yet paid, will poll again
@@ -68,10 +60,10 @@ const PaymentSuccess: React.FC = () => {
     // Initial fetch with delay
     const initialTimer = setTimeout(async () => {
       await fetchInvoiceStatus();
-      
+
       // Set up polling every 3 seconds if needed
       pollInterval = setInterval(fetchInvoiceStatus, 3000);
-      
+
       // Stop polling after 2 minutes to avoid infinite polling
       setTimeout(() => {
         if (pollInterval) {
@@ -158,12 +150,12 @@ const PaymentSuccess: React.FC = () => {
         <CardContent sx={{ textAlign: 'center', p: 4 }}>
           {isPaid ? (
             <>
-              <CheckCircleOutlineIcon 
-                sx={{ 
-                  fontSize: 80, 
-                  color: 'success.main', 
-                  mb: 2 
-                }} 
+              <CheckCircleOutlineIcon
+                sx={{
+                  fontSize: 80,
+                  color: 'success.main',
+                  mb: 2,
+                }}
               />
               <Typography variant="h4" color="success.main" gutterBottom>
                 Payment Successful!
@@ -171,22 +163,25 @@ const PaymentSuccess: React.FC = () => {
               <Typography variant="h6" color="textSecondary" gutterBottom>
                 Thank you for your payment
               </Typography>
-              
+
               {invoice && (
                 <Box sx={{ mt: 3, mb: 3 }}>
                   <Typography variant="body1" gutterBottom>
                     <strong>Invoice:</strong> {invoice.invoiceNumber}
                   </Typography>
                   <Typography variant="body1" gutterBottom>
-                    <strong>Amount Paid:</strong> {formatAmount(invoice.totalAmount, invoice.currency)}
+                    <strong>Amount Paid:</strong>{' '}
+                    {formatAmount(invoice.totalAmount, invoice.currency)}
                   </Typography>
                   <Typography variant="body1" gutterBottom>
-                    <strong>Status:</strong> 
-                    <span style={{ 
-                      color: '#4caf50', 
-                      fontWeight: 'bold',
-                      marginLeft: '8px'
-                    }}>
+                    <strong>Status:</strong>
+                    <span
+                      style={{
+                        color: '#4caf50',
+                        fontWeight: 'bold',
+                        marginLeft: '8px',
+                      }}
+                    >
                       PAID
                     </span>
                   </Typography>
@@ -194,8 +189,8 @@ const PaymentSuccess: React.FC = () => {
               )}
 
               <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-                A confirmation email has been sent to you with the payment details.
-                The invoice status has been updated in our system.
+                A confirmation email has been sent to you with the payment details. The invoice
+                status has been updated in our system.
               </Typography>
             </>
           ) : (
@@ -215,12 +210,7 @@ const PaymentSuccess: React.FC = () => {
           )}
 
           <Box sx={{ mt: 4 }}>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              size="large"
-              onClick={handleBackToInvoices}
-            >
+            <Button variant="contained" color="primary" size="large" onClick={handleBackToInvoices}>
               Back to Invoices
             </Button>
           </Box>

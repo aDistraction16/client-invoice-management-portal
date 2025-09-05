@@ -26,13 +26,27 @@ const theme = createTheme({
 });
 
 const AppRoutes: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
       {/* Public payment success route - accessible without authentication */}
       <Route path="/invoices/:invoiceId/payment-success" element={<PaymentSuccess />} />
-      
+
       {!user ? (
         <>
           <Route path="/login" element={<Login />} />
@@ -48,7 +62,7 @@ const AppRoutes: React.FC = () => {
           <Route path="time-entries" element={<TimeEntries />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="profile" element={<UserProfile />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} />
         </Route>
       )}
     </Routes>

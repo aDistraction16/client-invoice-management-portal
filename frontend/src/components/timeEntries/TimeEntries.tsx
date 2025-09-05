@@ -48,14 +48,19 @@ const TimeEntries: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  
+
   // Timer state
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
   const [timerDescription, setTimerDescription] = useState('');
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<TimeEntryFormData>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<TimeEntryFormData>({
     defaultValues: {
       projectId: 0,
       date: new Date().toISOString().split('T')[0],
@@ -80,7 +85,7 @@ const TimeEntries: React.FC = () => {
       setLoading(true);
       const [entriesRes, projectsRes] = await Promise.all([
         timeEntriesAPI.getAll(),
-        projectsAPI.getAll()
+        projectsAPI.getAll(),
       ]);
       setTimeEntries(entriesRes.timeEntries);
       setProjects(projectsRes.projects);
@@ -209,11 +214,7 @@ const TimeEntries: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Time Tracking</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-        >
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()}>
           Add Entry
         </Button>
       </Box>
@@ -240,12 +241,12 @@ const TimeEntries: React.FC = () => {
                   size="small"
                   placeholder="What are you working on?"
                   value={timerDescription}
-                  onChange={(e) => setTimerDescription(e.target.value)}
-                  sx={{ 
-                    mt: 1, 
+                  onChange={e => setTimerDescription(e.target.value)}
+                  sx={{
+                    mt: 1,
                     backgroundColor: 'white',
                     borderRadius: 1,
-                    '& .MuiInputBase-input': { color: 'black' }
+                    '& .MuiInputBase-input': { color: 'black' },
                   }}
                 />
               </Box>
@@ -270,35 +271,40 @@ const TimeEntries: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               Quick Timer Start
             </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 2 }}>
-              {projects.filter(p => p.status === 'active').map((project) => (
-                <Box
-                  key={project.id}
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    '&:hover': { backgroundColor: 'action.hover' }
-                  }}
-                >
-                  <Box>
-                    <Typography variant="subtitle2">{project.projectName}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {getClientName(project.id)}
-                    </Typography>
-                  </Box>
-                  <IconButton
-                    color="primary"
-                    onClick={() => startTimer(project.id)}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gap: 2,
+              }}
+            >
+              {projects
+                .filter(p => p.status === 'active')
+                .map(project => (
+                  <Box
+                    key={project.id}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      '&:hover': { backgroundColor: 'action.hover' },
+                    }}
                   >
-                    <PlayIcon />
-                  </IconButton>
-                </Box>
-              ))}
+                    <Box>
+                      <Typography variant="subtitle2">{project.projectName}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {getClientName(project.id)}
+                      </Typography>
+                    </Box>
+                    <IconButton color="primary" onClick={() => startTimer(project.id)}>
+                      <PlayIcon />
+                    </IconButton>
+                  </Box>
+                ))}
             </Box>
           </CardContent>
         </Card>
@@ -326,7 +332,7 @@ const TimeEntries: React.FC = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              timeEntries.map((entry) => (
+              timeEntries.map(entry => (
                 <TableRow key={entry.id} hover>
                   <TableCell>{formatDate(entry.date)}</TableCell>
                   <TableCell>
@@ -348,23 +354,13 @@ const TimeEntries: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {entry.description || '-'}
-                    </Typography>
+                    <Typography variant="body2">{entry.description || '-'}</Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton
-                      onClick={() => handleOpen(entry)}
-                      color="primary"
-                      size="small"
-                    >
+                    <IconButton onClick={() => handleOpen(entry)} color="primary" size="small">
                       <EditIcon />
                     </IconButton>
-                    <IconButton
-                      onClick={() => handleDelete(entry.id)}
-                      color="error"
-                      size="small"
-                    >
+                    <IconButton onClick={() => handleDelete(entry.id)} color="error" size="small">
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
@@ -377,24 +373,22 @@ const TimeEntries: React.FC = () => {
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogTitle>
-            {editingEntry ? 'Edit Time Entry' : 'Add New Time Entry'}
-          </DialogTitle>
+          <DialogTitle>{editingEntry ? 'Edit Time Entry' : 'Add New Time Entry'}</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Controller
                 name="projectId"
                 control={control}
-                rules={{ required: 'Project is required', min: { value: 1, message: 'Please select a project' } }}
+                rules={{
+                  required: 'Project is required',
+                  min: { value: 1, message: 'Please select a project' },
+                }}
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.projectId}>
                     <InputLabel>Project</InputLabel>
-                    <Select
-                      {...field}
-                      label="Project"
-                    >
+                    <Select {...field} label="Project">
                       <MenuItem value={0}>Select a project</MenuItem>
-                      {projects.map((project) => (
+                      {projects.map(project => (
                         <MenuItem key={project.id} value={project.id}>
                           {project.projectName} - {getClientName(project.id)}
                         </MenuItem>
@@ -408,7 +402,7 @@ const TimeEntries: React.FC = () => {
                   </FormControl>
                 )}
               />
-              
+
               <Controller
                 name="date"
                 control={control}
@@ -425,13 +419,13 @@ const TimeEntries: React.FC = () => {
                   />
                 )}
               />
-              
+
               <Controller
                 name="hoursLogged"
                 control={control}
-                rules={{ 
+                rules={{
                   required: 'Hours logged is required',
-                  min: { value: 0.01, message: 'Hours must be greater than 0' }
+                  min: { value: 0.01, message: 'Hours must be greater than 0' },
                 }}
                 render={({ field }) => (
                   <TextField
@@ -445,7 +439,7 @@ const TimeEntries: React.FC = () => {
                   />
                 )}
               />
-              
+
               <Controller
                 name="description"
                 control={control}
@@ -466,12 +460,8 @@ const TimeEntries: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button 
-              type="submit" 
-              variant="contained"
-              disabled={submitting}
-            >
-              {submitting ? <CircularProgress size={20} /> : (editingEntry ? 'Update' : 'Create')}
+            <Button type="submit" variant="contained" disabled={submitting}>
+              {submitting ? <CircularProgress size={20} /> : editingEntry ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </form>
