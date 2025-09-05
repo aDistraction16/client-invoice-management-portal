@@ -8,9 +8,9 @@
 ![Database](https://img.shields.io/badge/Database-PostgreSQL-blue)
 ![Payments](https://img.shields.io/badge/Payments-Stripe-purple)
 
-A modern, production-ready web application for managing clients, tracking project hours, and processing invoice payments. Features multi-currency support, real-time payment processing, and professional UI/UX design.
+A modern, web application for managing clients, tracking project hours, and processing invoice payments. Features multi-currency support, real-time payment processing.
 
-## 🚀 **Live Demo Features**
+## 🚀 **Features**
 
 ### 💼 **Business Management**
 - **Client Management**: Complete CRUD operations with professional dashboard
@@ -203,18 +203,6 @@ This project demonstrates:
 - **Database Design** with PostgreSQL and Drizzle ORM
 - **Modern UI/UX** with Material-UI and TypeScript
 - **Professional Code Quality** with Prettier and ESLint
-
-## 🤝 **Contributing**
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 **Acknowledgments**
 
