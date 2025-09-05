@@ -10,6 +10,9 @@
 
 A modern, web application for managing clients, tracking project hours, and processing invoice payments. Features multi-currency support, real-time payment processing.
 
+## Dashboard Screenshot
+<img width="2535" height="1399" alt="Sample" src="https://github.com/user-attachments/assets/0e7be21e-23c4-419b-8a6a-fa1f4b153216" />
+
 ## 🚀 **Features**
 
 ### 💼 **Business Management**
